@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CircleCheck, Link2, Loader2, Upload } from "lucide-react";
 import { createVideo, type FormState } from "@/app/actions";
+import { useUploadForm } from "@/lib/useUploadForm";
 
 export function VideoForm() {
-  const [state, action, pending] = useActionState<FormState, FormData>(createVideo, {});
+  const { state, onSubmit, busy, uploading, error } = useUploadForm<FormState>(createVideo, {}, { file: "video" });
   const [mode, setMode] = useState<"youtube" | "file">("youtube");
   const [fileName, setFileName] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
@@ -18,7 +19,7 @@ export function VideoForm() {
   }, [state]);
 
   return (
-    <form ref={formRef} action={action} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
+    <form ref={formRef} onSubmit={onSubmit} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
       <h2 className="text-2xl font-medium text-forest-950">Add a video</h2>
       <div className="mt-6 inline-flex rounded-full bg-sand p-1">
         {(["youtube", "file"] as const).map((m) => (
@@ -60,10 +61,10 @@ export function VideoForm() {
           <textarea id="description" name="description" rows={3} className="field" placeholder="A short description (optional)" />
         </div>
       </div>
-      {state.error && <p className="mt-4 text-sm text-clay-500">{state.error}</p>}
+      {error && <p className="mt-4 text-sm text-clay-500">{error}</p>}
       {state.ok && <p className="mt-4 flex items-center gap-2 text-sm text-forest-700"><CircleCheck className="h-4 w-4" /> Video added!</p>}
-      <button disabled={pending} className="btn btn-primary mt-6">
-        {pending ? <><Loader2 className="h-4 w-4 animate-spin" /> Uploading…</> : "Add video"}
+      <button disabled={busy} className="btn btn-primary mt-6">
+        {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> {uploading ? "Uploading video…" : "Saving…"}</> : "Add video"}
       </button>
     </form>
   );

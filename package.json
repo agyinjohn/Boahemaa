@@ -9,6 +9,8 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@upstash/redis": "^1.39.0",
+    "cloudinary": "^2.11.0",
     "lucide-react": "^1.59.0",
     "next": "15.5",
     "react": "^19.3.1",

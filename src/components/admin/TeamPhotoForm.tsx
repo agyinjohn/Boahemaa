@@ -1,16 +1,17 @@
 "use client";
 
-import { useActionState, useRef } from "react";
+import { useRef } from "react";
 import { Camera, Loader2 } from "lucide-react";
 import { uploadTeamPhoto, type FormState } from "@/app/actions";
+import { useUploadForm } from "@/lib/useUploadForm";
 
 /** Uploads a team member's photo as soon as a file is chosen. */
 export function TeamPhotoForm({ slug, hasPhoto }: { slug: string; hasPhoto: boolean }) {
-  const [state, action, pending] = useActionState<FormState, FormData>(uploadTeamPhoto, {});
+  const { onSubmit, busy: pending, error } = useUploadForm<FormState>(uploadTeamPhoto, {}, { photo: "image" });
   const formRef = useRef<HTMLFormElement>(null);
 
   return (
-    <form ref={formRef} action={action}>
+    <form ref={formRef} onSubmit={onSubmit}>
       <input type="hidden" name="slug" value={slug} />
       <label className={`btn btn-primary cursor-pointer whitespace-nowrap px-4 py-2 ${pending ? "pointer-events-none opacity-60" : ""}`}>
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
@@ -23,7 +24,7 @@ export function TeamPhotoForm({ slug, hasPhoto }: { slug: string; hasPhoto: bool
           onChange={(e) => e.target.files?.length && formRef.current?.requestSubmit()}
         />
       </label>
-      {state.error && <p className="mt-2 text-xs text-clay-500">{state.error}</p>}
+      {error && <p className="mt-2 text-xs text-clay-500">{error}</p>}
     </form>
   );
 }

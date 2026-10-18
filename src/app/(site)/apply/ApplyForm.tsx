@@ -1,16 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import { startTransition, useActionState, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Loader2, PartyPopper, Upload } from "lucide-react";
 import { submitApplication, type ApplyState } from "@/app/actions";
+import { useUploadForm } from "@/lib/useUploadForm";
 import { products, regions } from "@/lib/site";
 import { ProductIcon } from "@/components/ProductIcon";
 
 const steps = ["Choose cover", "Your details", "Confirm"];
 
 export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
-  const [state, action, pending] = useActionState<ApplyState, FormData>(submitApplication, {});
+  const { state, onSubmit, busy, uploading, error } = useUploadForm<ApplyState>(submitApplication, {}, { document: "document" });
   const [step, setStep] = useState(0);
   const [productSlug, setProductSlug] = useState(
     products.some((p) => p.slug === initialProduct) ? initialProduct! : products[0].slug,
@@ -50,15 +51,7 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
   }
 
   return (
-    <form
-      className="card p-6 md:p-10"
-      onSubmit={(e) => {
-        // Submit manually so React doesn't reset the fields if the server returns an error.
-        e.preventDefault();
-        const data = new FormData(e.currentTarget);
-        startTransition(() => action(data));
-      }}
-    >
+    <form className="card p-6 md:p-10" onSubmit={onSubmit}>
       {/* Progress */}
       <ol className="mb-10 flex items-center gap-3">
         {steps.map((s, i) => (
@@ -178,7 +171,7 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
         </label>
       </div>
 
-      {state.error && <p className="mt-6 rounded-xl bg-clay-500/10 px-4 py-3 text-sm text-clay-500">{state.error}</p>}
+      {error && <p className="mt-6 rounded-xl bg-clay-500/10 px-4 py-3 text-sm text-clay-500">{error}</p>}
 
       <div className="mt-10 flex items-center justify-between border-t border-forest-900/8 pt-6">
         {step > 0 ? (
@@ -191,8 +184,8 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
             Continue <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <button type="submit" disabled={pending} className="btn btn-gold">
-            {pending ? <><Loader2 className="h-4 w-4 animate-spin" /> Submitting…</> : <>Submit application <Check className="h-4 w-4" /></>}
+          <button type="submit" disabled={busy} className="btn btn-gold">
+            {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> {uploading ? "Uploading…" : "Submitting…"}</> : <>Submit application <Check className="h-4 w-4" /></>}
           </button>
         )}
       </div>

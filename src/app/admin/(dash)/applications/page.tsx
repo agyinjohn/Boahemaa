@@ -65,7 +65,7 @@ export default async function ApplicationsPage({ searchParams }: { searchParams:
                     <div className="sm:col-span-2 lg:col-span-3"><dt className="text-xs uppercase tracking-wider text-muted">Message</dt><dd className="mt-1 whitespace-pre-line">{a.message}</dd></div>
                   )}
                   {a.document && (
-                    <a href={a.document} target="_blank" className="inline-flex items-center gap-2 font-semibold text-forest-700 hover:underline">
+                    <a href={`/admin/documents/${encodeURIComponent(a.document)}`} target="_blank" className="inline-flex items-center gap-2 font-semibold text-forest-700 hover:underline">
                       <FileText className="h-4 w-4" /> View ID document
                     </a>
                   )}

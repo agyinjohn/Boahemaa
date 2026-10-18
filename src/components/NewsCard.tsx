@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { ArrowUpRight } from "lucide-react";
 import type { News } from "@/lib/db";
-import { formatDate } from "@/lib/format";
+import { formatDate, optimizedImage } from "@/lib/format";
 
 const tints = ["bg-forest-800", "bg-gold-500", "bg-clay-500", "bg-forest-600"];
 
 export function NewsCover({ item, index = 0, className = "" }: { item: News; index?: number; className?: string }) {
   if (item.image) {
     // eslint-disable-next-line @next/next/no-img-element
-    return <img src={item.image} alt="" className={`h-full w-full object-cover ${className}`} />;
+    return <img src={optimizedImage(item.image, 1600)} alt="" className={`h-full w-full object-cover ${className}`} />;
   }
   return (
     <div className={`relative h-full w-full overflow-hidden ${tints[index % tints.length]} ${className}`}>

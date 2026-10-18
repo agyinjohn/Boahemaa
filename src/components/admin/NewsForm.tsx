@@ -1,11 +1,12 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CircleCheck, ImagePlus, Loader2, Send } from "lucide-react";
 import { createNews, type FormState } from "@/app/actions";
+import { useUploadForm } from "@/lib/useUploadForm";
 
 export function NewsForm() {
-  const [state, action, pending] = useActionState<FormState, FormData>(createNews, {});
+  const { state, onSubmit, busy, uploading, error } = useUploadForm<FormState>(createNews, {}, { image: "image" });
   const [preview, setPreview] = useState<string>();
   const formRef = useRef<HTMLFormElement>(null);
 
@@ -17,7 +18,7 @@ export function NewsForm() {
   }, [state]);
 
   return (
-    <form ref={formRef} action={action} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
+    <form ref={formRef} onSubmit={onSubmit} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
       <h2 className="text-2xl font-medium text-forest-950">Write a new story</h2>
       <div className="mt-6 grid gap-5">
         <div>
@@ -61,10 +62,10 @@ export function NewsForm() {
           <textarea id="body" name="body" required rows={8} className="field" placeholder="Write the full story. Leave a blank line between paragraphs." />
         </div>
       </div>
-      {state.error && <p className="mt-4 text-sm text-clay-500">{state.error}</p>}
+      {error && <p className="mt-4 text-sm text-clay-500">{error}</p>}
       {state.ok && <p className="mt-4 flex items-center gap-2 text-sm text-forest-700"><CircleCheck className="h-4 w-4" /> Story published!</p>}
-      <button disabled={pending} className="btn btn-primary mt-6">
-        {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Publish story
+      <button disabled={busy} className="btn btn-primary mt-6">
+        {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} {uploading ? "Uploading image…" : "Publish story"}
       </button>
     </form>
   );

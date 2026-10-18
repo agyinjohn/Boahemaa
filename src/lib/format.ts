@@ -8,3 +8,9 @@ export function parseYouTubeId(input: string): string | undefined {
   const match = value.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/);
   return match?.[1];
 }
+
+/** Adds Cloudinary's automatic format/quality and a max width to an image URL. Other URLs pass through. */
+export function optimizedImage(url: string | undefined, width: number) {
+  if (!url?.includes("res.cloudinary.com/") || !url.includes("/image/upload/")) return url;
+  return url.replace("/image/upload/", `/image/upload/f_auto,q_auto,c_limit,w_${width}/`);
+}

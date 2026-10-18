@@ -2,12 +2,25 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db, deleteUpload, getTeamPhotos, newId, saveUpload, setTeamPhoto, type ApplicationStatus } from "@/lib/db";
-import { checkPassword, endSession, requireAdmin, startSession } from "@/lib/auth";
+import { db, getTeamPhotos, newId, setTeamPhoto, type ApplicationStatus } from "@/lib/db";
+import { deleteUpload, signUpload, storeUpload, type UploadKind } from "@/lib/storage";
+import { checkPassword, endSession, isAdmin, requireAdmin, startSession } from "@/lib/auth";
 import { parseYouTubeId } from "@/lib/format";
 import { products, team } from "@/lib/site";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
+
+/* ─────────── Uploads ─────────── */
+
+/**
+ * Gives the browser a signature to upload one file straight to Cloudinary (returns null when
+ * Cloudinary isn't configured, so the file is sent with the form instead). Customers may upload
+ * ID documents; everything else is admin-only.
+ */
+export async function getUploadSignature(kind: UploadKind) {
+  if (kind !== "document" && !(await isAdmin())) throw new Error("Not signed in");
+  return signUpload(kind);
+}
 
 /* ─────────── Public: insurance application ─────────── */
 
@@ -32,7 +45,7 @@ export async function submitApplication(_: ApplyState, fd: FormData): Promise<Ap
 
   let document: string | undefined;
   try {
-    document = await saveUpload(fd.get("document"), true);
+    document = await storeUpload(fd.get("document"), "document");
   } catch {
     return { error: "ID document must be an image or PDF." };
   }
@@ -74,7 +87,7 @@ export async function createNews(_: FormState, fd: FormData): Promise<FormState>
   if (!title || !body) return { error: "Title and story are required." };
   let image: string | undefined;
   try {
-    image = await saveUpload(fd.get("image"));
+    image = await storeUpload(fd.get("image"), "image");
   } catch {
     return { error: "Cover image must be JPG, PNG, WEBP or GIF." };
   }
@@ -111,7 +124,7 @@ export async function createVideo(_: FormState, fd: FormData): Promise<FormState
   let file: string | undefined;
   if (!youtubeId) {
     try {
-      file = await saveUpload(fd.get("file"));
+      file = await storeUpload(fd.get("file"), "video");
     } catch {
       return { error: "Video must be MP4, WEBM or MOV." };
     }
@@ -161,11 +174,9 @@ export async function uploadTeamPhoto(_: FormState, fd: FormData): Promise<FormS
   await requireAdmin();
   const slug = text(fd, "slug");
   if (!team.some((m) => m.slug === slug)) return { error: "Unknown team member." };
-  const file = fd.get("photo");
-  if (file instanceof File && file.size > 0 && !file.type.startsWith("image/")) return { error: "Please choose an image." };
   let url: string | undefined;
   try {
-    url = await saveUpload(file);
+    url = await storeUpload(fd.get("photo"), "image");
   } catch {
     return { error: "Photo must be JPG, PNG, WEBP or GIF." };
   }

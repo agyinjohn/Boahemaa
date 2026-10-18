@@ -1,12 +1,20 @@
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
+import { Redis } from "@upstash/redis";
+import seedNews from "../../data/news.json";
 
-// A tiny JSON-file "database". Each collection is a file in /data.
+/*
+ * A tiny JSON "database". Each collection is stored as one JSON value:
+ * - in Upstash Redis when its env vars are set (needed on Vercel, whose disk is read-only), or
+ * - in data/<name>.json on the local disk otherwise.
+ */
+
+const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
+
 const DATA_DIR = path.join(process.cwd(), "data");
-export const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-// Customer ID documents live here and are only served to logged-in admins.
-export const PRIVATE_DIR = path.join(UPLOAD_DIR, "private");
 
 export type News = {
   id: string;
@@ -48,19 +56,29 @@ export type Application = {
 
 type Collections = { news: News; videos: Video; applications: Application };
 
-async function read<K extends keyof Collections>(name: K): Promise<Collections[K][]> {
+async function readValue<T>(key: string, fallback: T): Promise<T> {
+  if (redis) return (await redis.get<T>(`susubox:${key}`)) ?? fallback;
   try {
-    const raw = await fs.readFile(path.join(DATA_DIR, `${name}.json`), "utf8");
-    return JSON.parse(raw);
+    return JSON.parse(await fs.readFile(path.join(DATA_DIR, `${key}.json`), "utf8"));
   } catch {
-    return [];
+    return fallback;
   }
 }
 
-async function write<K extends keyof Collections>(name: K, rows: Collections[K][]) {
+async function writeValue(key: string, value: unknown) {
+  if (redis) {
+    await redis.set(`susubox:${key}`, value);
+    return;
+  }
   await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(path.join(DATA_DIR, `${name}.json`), JSON.stringify(rows, null, 2));
+  await fs.writeFile(path.join(DATA_DIR, `${key}.json`), JSON.stringify(value, null, 2));
 }
+
+// The sample news stories are shown until the first change is saved to Redis.
+const seeds: Partial<{ [K in keyof Collections]: Collections[K][] }> = { news: seedNews as News[] };
+
+const read = <K extends keyof Collections>(name: K) => readValue<Collections[K][]>(name, seeds[name] ?? []);
+const write = <K extends keyof Collections>(name: K, rows: Collections[K][]) => writeValue(name, rows);
 
 const newestFirst = <T extends { createdAt: string }>(rows: T[]) =>
   [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
@@ -93,43 +111,13 @@ export const db = {
   },
 };
 
-/* Team photos: a map of team member slug → uploaded photo URL. */
-const TEAM_PHOTOS = path.join(DATA_DIR, "team-photos.json");
+/* Team photos: a map of team member slug → photo URL. */
 
-export async function getTeamPhotos(): Promise<Record<string, string>> {
-  try {
-    return JSON.parse(await fs.readFile(TEAM_PHOTOS, "utf8"));
-  } catch {
-    return {};
-  }
-}
+export const getTeamPhotos = () => readValue<Record<string, string>>("team-photos", {});
 
 export async function setTeamPhoto(slug: string, url: string | undefined) {
   const photos = await getTeamPhotos();
   if (url) photos[slug] = url;
   else delete photos[slug];
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(TEAM_PHOTOS, JSON.stringify(photos, null, 2));
-}
-
-const ALLOWED = /\.(jpe?g|png|webp|gif|pdf|mp4|webm|mov)$/i;
-
-/**
- * Saves an uploaded file and returns its URL, or undefined if no file was sent.
- * Private files (customer documents) are served from /admin/documents behind the admin login.
- */
-export async function saveUpload(file: FormDataEntryValue | null, isPrivate = false): Promise<string | undefined> {
-  if (!(file instanceof File) || file.size === 0) return undefined;
-  const ext = path.extname(file.name).toLowerCase();
-  if (!ALLOWED.test(ext)) throw new Error("Unsupported file type");
-  const name = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;
-  const dir = isPrivate ? PRIVATE_DIR : UPLOAD_DIR;
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(path.join(dir, name), Buffer.from(await file.arrayBuffer()));
-  return isPrivate ? `/admin/documents/${name}` : `/uploads/${name}`;
-}
-
-export async function deleteUpload(url?: string) {
-  if (url?.startsWith("/uploads/")) await fs.rm(path.join(UPLOAD_DIR, path.basename(url)), { force: true });
-  if (url?.startsWith("/admin/documents/")) await fs.rm(path.join(PRIVATE_DIR, path.basename(url)), { force: true });
+  await writeValue("team-photos", photos);
 }

@@ -1,4 +1,4 @@
-import { UPLOAD_DIR } from "@/lib/db";
+import { UPLOAD_DIR } from "@/lib/storage";
 import { serveFile } from "@/lib/serveFile";
 
 // Public files uploaded through the admin dashboard (news images, videos).

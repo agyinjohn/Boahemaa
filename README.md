@@ -36,15 +36,31 @@ For a production build: `npm run build && npm start`.
 
 ## How data is stored
 
-To keep things simple there is no database server. Everything is saved as JSON files in the `data/` folder:
+The site works in two modes, picked automatically from the environment variables:
 
-- `data/news.json`: news stories (comes with 4 sample stories)
-- `data/videos.json`: videos
-- `data/applications.json`: applications submitted on the website (created automatically)
-- `data/team-photos.json`: which photo belongs to which team member (created when you upload one)
-- `data/uploads/`: uploaded images and videos. Customer ID documents go in `data/uploads/private/` and only logged-in admins can open them.
+| | **Local mode** (no accounts needed) | **Cloud mode** (for Vercel) |
+|---|---|---|
+| Uploaded files (images, videos, ID documents) | `data/uploads/` on your computer | **Cloudinary** |
+| Data (news, videos, applications, team photos) | JSON files in `data/` | **Upstash Redis** |
+| Turned on when | the variables below are empty | the variables below are set |
 
-> Note: because data is saved to files, host it somewhere with a persistent disk (e.g. Render, Railway or a VPS). Vercel's serverless hosting does not keep files written at runtime.
+In cloud mode, files are uploaded **straight from the browser to Cloudinary**, so large videos never pass through Vercel (which only accepts about 4.5 MB per request). Customer ID documents are uploaded as private files, and only a logged-in admin can open them, through a link that expires after 10 minutes. News images and team photos are automatically resized and compressed by Cloudinary.
+
+`data/news.json` holds 4 sample stories. They show on a fresh deployment until the first change is saved.
+
+## Deploy to Vercel
+
+1. **Cloudinary:** create a free account at [cloudinary.com](https://cloudinary.com). On the dashboard, copy your *Cloud name*, *API key* and *API secret*.
+2. **Vercel:** import this GitHub repo at [vercel.com/new](https://vercel.com/new).
+3. **Redis:** in the Vercel project, open **Storage → Create → Upstash for Redis** (free plan) and connect it to the project. Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you.
+4. **Environment variables:** in **Settings → Environment Variables**, add:
+   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - `ADMIN_PASSWORD` (choose your own) and `SESSION_SECRET` (any long random text)
+5. **Redeploy** (Deployments → ⋯ → Redeploy) so the new variables take effect.
+
+To try cloud mode locally, copy `.env.example` to `.env.local` and fill in the same values.
+
+> If PDFs uploaded as ID documents won't open, turn on **Settings → Security → "Allow delivery of PDF and ZIP files"** in Cloudinary.
 
 ## Editing content
 
@@ -62,6 +78,6 @@ src/
     actions.ts     server actions (apply, login, publish news/videos, update applications)
     uploads/       serves uploaded images/videos
   components/      navbar, footer, cards and admin UI
-  lib/             data storage, auth and site content
-data/              JSON "database" + uploads
+  lib/             db.ts (Redis / JSON files), storage.ts (Cloudinary / local uploads), auth, site content
+data/              sample news + local-mode data and uploads
 ```
