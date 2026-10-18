@@ -2,20 +2,21 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CirclePlay, ClipboardList, ExternalLink, LayoutDashboard, LogOut, MessageSquare, Newspaper, Users } from "lucide-react";
+import { CirclePlay, ClipboardList, ExternalLink, Inbox, LayoutDashboard, LogOut, MessageSquare, Newspaper, Users } from "lucide-react";
 import { logout } from "@/app/actions";
 import { LogoMark } from "@/components/Logo";
 
 const links = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/applications", label: "Applications", icon: ClipboardList },
+  { href: "/admin/messages", label: "Messages", icon: Inbox },
   { href: "/admin/news", label: "News stories", icon: Newspaper },
   { href: "/admin/videos", label: "Videos", icon: CirclePlay },
   { href: "/admin/team", label: "Team photos", icon: Users },
   { href: "/admin/sms", label: "SMS log", icon: MessageSquare },
 ];
 
-export function AdminNav({ pending }: { pending: number }) {
+export function AdminNav({ badges }: { badges: Record<string, number> }) {
   const pathname = usePathname();
   const active = (href: string) => (href === "/admin" ? pathname === href : pathname.startsWith(href));
 
@@ -40,8 +41,8 @@ export function AdminNav({ pending }: { pending: number }) {
           >
             <l.icon className="h-4 w-4" />
             {l.label}
-            {l.href === "/admin/applications" && pending > 0 && (
-              <span className="ml-auto rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-bold text-forest-950">{pending}</span>
+            {badges[l.href] > 0 && (
+              <span className="ml-auto rounded-full bg-gold-500 px-2 py-0.5 text-[11px] font-bold text-forest-950">{badges[l.href]}</span>
             )}
           </Link>
         ))}

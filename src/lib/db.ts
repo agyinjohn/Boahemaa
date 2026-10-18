@@ -12,7 +12,7 @@ import seedNews from "../../data/news.json";
 
 const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
 const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
+export const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -75,7 +75,18 @@ export type SmsLog = {
   createdAt: string;
 };
 
-type Collections = { news: News; videos: Video; applications: Application; sms: SmsLog };
+export type Message = {
+  id: string;
+  name: string;
+  phone: string;
+  email: string;
+  topic: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+};
+
+type Collections = { news: News; videos: Video; applications: Application; sms: SmsLog; messages: Message };
 
 async function readValue<T>(key: string, fallback: T): Promise<T> {
   if (redis) return (await redis.get<T>(`susubox:${key}`)) ?? fallback;

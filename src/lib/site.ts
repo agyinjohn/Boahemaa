@@ -90,6 +90,8 @@ export const projects = [
   { title: "Financial Literacy Tour", place: "16 regions", year: "2021", tag: "Community", text: "Workshops reaching 20,000 people on saving, budgeting and how insurance works." },
 ];
 
+export const CONTACT_TOPICS = ["General enquiry", "Claims", "Payments", "Become an agent", "Complaint"];
+
 export const regions = [
   "Greater Accra", "Ashanti", "Western", "Central", "Eastern", "Volta", "Northern", "Upper East",
   "Upper West", "Bono", "Bono East", "Ahafo", "Western North", "Oti", "Savannah", "North East",

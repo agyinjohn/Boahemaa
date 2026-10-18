@@ -13,7 +13,7 @@ A school-project website for **SUSU BOX**, a fictional Ghanaian insurance compan
 | **Projects** (`/projects`) | Community projects and programmes |
 | **News** (`/news`) | News stories with category filter and article pages |
 | **Videos** (`/videos`) | YouTube or uploaded videos |
-| **Contact** (`/contact`) | Phone, WhatsApp, email, branches, map |
+| **Contact** (`/contact`) | Contact form (messages go to Admin → Messages), phone, WhatsApp, email, branches, map |
 | **Apply** (`/apply`) | Application form in 3 steps with ID upload, a reference number and **online payment** |
 | **Pay** (`/pay/<reference>`) | Pay the first premium by **Mobile Money or card through Paystack** (link is also sent by SMS) |
 | **SMS** | **mNotify** texts customers when they apply, pay, and when their application is approved/rejected |
@@ -74,6 +74,16 @@ In cloud mode, files are uploaded **straight from the browser to Cloudinary**, s
 | **mNotify** | Create an account at [mnotify.com](https://www.mnotify.com), buy some SMS credit, and **register a sender ID** (e.g. `SUSUBOX`; approval can take a day or two). Put the API key in `MNOTIFY_API_KEY` and the sender ID in `MNOTIFY_SENDER_ID`. Optionally set `ADMIN_SMS_PHONE` to get a text for every new application. |
 
 Without these keys the site still works: the Pay button is hidden, and SMS messages are recorded in the SMS log as `simulated`, which is handy for a demo.
+
+## Spam protection
+
+The application form, contact form and admin login are protected by:
+
+1. **Honeypot:** a hidden field that people never see but bots fill in. Those submissions are quietly dropped (the bot is shown a fake "success").
+2. **Time check:** each form carries a signed timestamp. Submissions sent less than 3 seconds after the page loaded, or with a forged or expired (over 24 hours) token, are rejected.
+3. **Rate limits per IP address:** 5 applications and 5 contact messages per hour, and 10 login attempts per 15 minutes. On Vercel the counts are kept in Redis so they apply across all servers. This also stops bots from using up your SMS credit.
+
+The limits are set in `src/app/actions.ts` (`checkSpam(fd, "apply")`, `rateLimit("login:…", 10, 15 * 60)`).
 
 ## Deploy to Vercel
 

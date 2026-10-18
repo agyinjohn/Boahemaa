@@ -1,13 +1,18 @@
 "use client";
 
-import { useActionState } from "react";
+import { startTransition, useActionState } from "react";
 import { CircleCheck, Loader2, Send } from "lucide-react";
 import { sendTestSms, type FormState } from "@/app/actions";
 
 export function TestSmsForm() {
   const [state, action, pending] = useActionState<FormState, FormData>(sendTestSms, {});
   return (
-    <form action={action} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
+    <form onSubmit={(e) => {
+        // Submit manually: a plain form action would clear what the person typed if there's an error.
+        e.preventDefault();
+        const data = new FormData(e.currentTarget);
+        startTransition(() => action(data));
+      }} className="rounded-3xl bg-white p-6 shadow-sm md:p-8">
       <h2 className="text-2xl font-medium text-forest-950">Send a test SMS</h2>
       <p className="mt-1 text-sm text-muted">Check that mNotify is set up correctly.</p>
       <div className="mt-6 grid gap-4">

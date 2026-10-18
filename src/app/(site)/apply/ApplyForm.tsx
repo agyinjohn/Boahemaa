@@ -8,10 +8,11 @@ import { useUploadForm } from "@/lib/useUploadForm";
 import { cedis, products, regions } from "@/lib/site";
 import { ProductIcon } from "@/components/ProductIcon";
 import { PayButton } from "@/components/pay/PayButton";
+import { SpamTrap } from "@/components/SpamTrap";
 
 const steps = ["Choose cover", "Your details", "Confirm"];
 
-export function ApplyForm({ initialProduct, paymentsEnabled }: { initialProduct?: string; paymentsEnabled: boolean }) {
+export function ApplyForm({ initialProduct, paymentsEnabled, formToken }: { initialProduct?: string; paymentsEnabled: boolean; formToken: string }) {
   const { state, onSubmit, busy, uploading, error } = useUploadForm<ApplyState>(submitApplication, {}, { document: "document" });
   const [step, setStep] = useState(0);
   const [productSlug, setProductSlug] = useState(
@@ -62,6 +63,7 @@ export function ApplyForm({ initialProduct, paymentsEnabled }: { initialProduct?
 
   return (
     <form className="card p-6 md:p-10" onSubmit={onSubmit}>
+      <SpamTrap token={formToken} />
       {/* Progress */}
       <ol className="mb-10 flex items-center gap-3">
         {steps.map((s, i) => (

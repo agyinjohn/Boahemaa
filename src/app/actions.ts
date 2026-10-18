@@ -6,11 +6,12 @@ import { db, getTeamPhotos, newId, setTeamPhoto, type ApplicationStatus } from "
 import { deleteUpload, signUpload, storeUpload, type UploadKind } from "@/lib/storage";
 import { checkPassword, endSession, isAdmin, requireAdmin, startSession } from "@/lib/auth";
 import { parseYouTubeId } from "@/lib/format";
-import { planPrice, team } from "@/lib/site";
+import { CONTACT_TOPICS, planPrice, team } from "@/lib/site";
 import { initializePayment, paystackEnabled } from "@/lib/paystack";
 import { normalizePhone, sendSms } from "@/lib/sms";
 import { smsAdminNewApplication, smsApplicationReceived, smsStatusChanged } from "@/lib/notify";
 import { siteUrl } from "@/lib/url";
+import { checkSpam, clientIp, rateLimit } from "@/lib/spam";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 
@@ -36,6 +37,11 @@ const newReference = () =>
   `SB-${new Date().getFullYear()}-${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => REF_CHARS[b % REF_CHARS.length]).join("")}`;
 
 export async function submitApplication(_: ApplyState, fd: FormData): Promise<ApplyState> {
+  const spam = await checkSpam(fd, "apply");
+  if (!spam.ok) {
+    // For bots, act as if it worked (nothing is saved and no SMS is sent).
+    return spam.silent ? { ok: true, reference: newReference(), name: "there", amount: 0 } : { error: spam.error };
+  }
   const fields = {
     fullName: text(fd, "fullName"),
     email: text(fd, "email"),
@@ -106,11 +112,39 @@ export async function startPayment(_: FormState, fd: FormData): Promise<FormStat
   redirect(checkoutUrl);
 }
 
+/* ─────────── Public: contact form ─────────── */
+
+export async function sendMessage(_: FormState, fd: FormData): Promise<FormState> {
+  const spam = await checkSpam(fd, "contact");
+  if (!spam.ok) return spam.silent ? { ok: true } : { error: spam.error };
+
+  const msg = {
+    name: text(fd, "name").slice(0, 100),
+    phone: text(fd, "phone").slice(0, 20),
+    email: text(fd, "email").slice(0, 120),
+    topic: CONTACT_TOPICS.includes(text(fd, "topic")) ? text(fd, "topic") : CONTACT_TOPICS[0],
+    message: text(fd, "message").slice(0, 2000),
+  };
+  if (!msg.name || !msg.message) return { error: "Please enter your name and a message." };
+  if (!msg.phone && !msg.email) return { error: "Please give a phone number or email so we can reply." };
+  if (msg.phone && normalizePhone(msg.phone).length < 10) return { error: "Please enter a valid phone number." };
+
+  await db.insert("messages", { id: newId(), ...msg, read: false, createdAt: new Date().toISOString() });
+  const staff = process.env.ADMIN_SMS_PHONE;
+  if (staff) await sendSms(staff, `New ${msg.topic.toLowerCase()} message from ${msg.name} (${msg.phone || msg.email}). See the admin dashboard.`);
+  revalidatePath("/admin", "layout");
+  return { ok: true };
+}
+
 /* ─────────── Admin: auth ─────────── */
 
 export type FormState = { ok?: boolean; error?: string };
 
 export async function login(_: FormState, fd: FormData): Promise<FormState> {
+  // Slow down password guessing: 10 attempts per 15 minutes per IP address.
+  if (!(await rateLimit(`login:${await clientIp()}`, 10, 15 * 60))) {
+    return { error: "Too many sign-in attempts. Please wait 15 minutes and try again." };
+  }
   if (!checkPassword(text(fd, "password"))) return { error: "Incorrect password." };
   await startSession();
   redirect("/admin");
@@ -297,4 +331,18 @@ export async function sendTestSms(_: FormState, fd: FormData): Promise<FormState
   const status = await sendSms(phone, message);
   revalidatePath("/admin/sms");
   return status === "failed" ? { error: "mNotify rejected the message. See the log below for details." } : { ok: true };
+}
+
+/* ─────────── Admin: contact messages ─────────── */
+
+export async function toggleMessageRead(fd: FormData) {
+  await requireAdmin();
+  await db.update("messages", text(fd, "id"), { read: text(fd, "read") === "true" });
+  revalidatePath("/admin", "layout");
+}
+
+export async function deleteMessage(fd: FormData) {
+  await requireAdmin();
+  await db.remove("messages", text(fd, "id"));
+  revalidatePath("/admin", "layout");
 }

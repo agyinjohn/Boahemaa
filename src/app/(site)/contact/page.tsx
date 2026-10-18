@@ -3,8 +3,12 @@ import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { Reveal } from "@/components/Reveal";
 import { company } from "@/lib/site";
+import { issueFormToken } from "@/lib/spam";
+import { ContactForm } from "./ContactForm";
 
 export const metadata: Metadata = { title: "Contact" };
+// Rendered per request so each visitor gets a fresh spam-protection token.
+export const dynamic = "force-dynamic";
 
 const branches = [
   { city: "Accra (Head Office)", address: "12 Independence Avenue" },
@@ -41,9 +45,12 @@ export default function ContactPage() {
           </Reveal>
         ))}
       </section>
-      <section className="container-x grid gap-6 pb-28 lg:grid-cols-[1fr_1.4fr]">
+      <section className="container-x grid gap-6 pb-6 lg:grid-cols-[1.4fr_1fr]">
         <Reveal>
-          <div className="h-full rounded-[2rem] bg-forest-900 p-10 text-cream">
+          <ContactForm formToken={issueFormToken()} />
+        </Reveal>
+        <Reveal delay={100}>
+          <div className="flex h-full flex-col rounded-[2rem] bg-forest-900 p-10 text-cream">
             <h2 className="text-3xl font-medium">Our branches</h2>
             <ul className="mt-8 space-y-6">
               {branches.map((b) => (
@@ -56,14 +63,30 @@ export default function ContactPage() {
                 </li>
               ))}
             </ul>
+            <a
+              href={`https://wa.me/${company.whatsapp.replace(/\D/g, "")}`}
+              target="_blank"
+              rel="noreferrer"
+              className="mt-auto flex items-center gap-4 rounded-2xl bg-cream/10 p-5 transition hover:bg-cream/15"
+            >
+              <span className="grid h-11 w-11 shrink-0 place-items-center rounded-xl bg-gold-500 text-forest-950">
+                <MessageCircle className="h-5 w-5" />
+              </span>
+              <span>
+                <span className="block font-semibold">Prefer WhatsApp?</span>
+                <span className="text-sm text-cream/60">Chat with us on {company.whatsapp}</span>
+              </span>
+            </a>
           </div>
         </Reveal>
-        <Reveal delay={100}>
-          <div className="h-full min-h-96 overflow-hidden rounded-[2rem] border border-forest-900/10">
+      </section>
+      <section className="container-x pb-28">
+        <Reveal>
+          <div className="h-96 overflow-hidden rounded-[2rem] border border-forest-900/10">
             <iframe
               title="SUSU BOX head office map"
               src="https://www.google.com/maps?q=Independence+Avenue,+Accra,+Ghana&output=embed"
-              className="h-full min-h-96 w-full grayscale-[40%]"
+              className="h-full w-full grayscale-[40%]"
               loading="lazy"
             />
           </div>
