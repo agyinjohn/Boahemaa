@@ -123,6 +123,15 @@ export async function logout() {
 
 /* ─────────── Admin: news ─────────── */
 
+const NEWS_CATEGORIES = ["News", "Community", "Announcement", "Guide", "Event"];
+
+/** The summary shown on news cards: what the admin typed, or the start of the story. */
+function excerptFor(fd: FormData, body: string) {
+  const typed = text(fd, "excerpt");
+  if (typed) return typed;
+  return body.length <= 160 ? body : body.slice(0, 160).replace(/\s+\S*$/, "") + "…";
+}
+
 export async function createNews(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
   const title = text(fd, "title");
@@ -138,11 +147,40 @@ export async function createNews(_: FormState, fd: FormData): Promise<FormState>
     id: newId(),
     title,
     body,
-    excerpt: text(fd, "excerpt") || body.slice(0, 160).replace(/\s+\S*$/, "") + "…",
-    category: text(fd, "category") || "News",
+    excerpt: excerptFor(fd, body),
+    category: NEWS_CATEGORIES.includes(text(fd, "category")) ? text(fd, "category") : "News",
     image,
     createdAt: new Date().toISOString(),
   });
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function updateNews(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const item = await db.get("news", text(fd, "id"));
+  if (!item) return { error: "This story no longer exists." };
+  const title = text(fd, "title");
+  const body = text(fd, "body");
+  if (!title || !body) return { error: "Title and story are required." };
+
+  let image = item.image;
+  try {
+    const uploaded = await storeUpload(fd.get("image"), "image");
+    if (uploaded) image = uploaded;
+    else if (fd.get("removeImage") === "on") image = undefined;
+  } catch {
+    return { error: "Cover image must be JPG, PNG, WEBP or GIF." };
+  }
+
+  await db.update("news", item.id, {
+    title,
+    body,
+    excerpt: excerptFor(fd, body),
+    category: NEWS_CATEGORIES.includes(text(fd, "category")) ? text(fd, "category") : item.category,
+    image,
+  });
+  if (image !== item.image) await deleteUpload(item.image);
   revalidatePath("/", "layout");
   return { ok: true };
 }

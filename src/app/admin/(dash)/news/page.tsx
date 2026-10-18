@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ExternalLink, Trash2 } from "lucide-react";
+import { ExternalLink, Pencil, Trash2 } from "lucide-react";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { deleteNews } from "@/app/actions";
@@ -21,10 +21,13 @@ export default async function AdminNewsPage() {
             {news.map((n, i) => (
               <li key={n.id} className="flex items-center gap-4 rounded-2xl bg-white p-3 shadow-sm">
                 <div className="h-16 w-20 shrink-0 overflow-hidden rounded-xl"><NewsCover item={n} index={i} className="[&>span]:hidden" /></div>
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-forest-950">{n.title}</p>
+                <Link href={`/admin/news/${n.id}`} className="min-w-0 flex-1">
+                  <p className="truncate font-semibold text-forest-950 hover:text-forest-600">{n.title}</p>
                   <p className="text-xs text-muted">{n.category} · {formatDate(n.createdAt)}</p>
-                </div>
+                </Link>
+                <Link href={`/admin/news/${n.id}`} className="grid h-9 w-9 place-items-center rounded-full text-forest-700 hover:bg-sand" aria-label="Edit">
+                  <Pencil className="h-4 w-4" />
+                </Link>
                 <Link href={`/news/${n.id}`} target="_blank" className="grid h-9 w-9 place-items-center rounded-full text-muted hover:bg-sand" aria-label="View">
                   <ExternalLink className="h-4 w-4" />
                 </Link>
