@@ -5,12 +5,13 @@ import { useRef, useState } from "react";
 import { ArrowLeft, ArrowRight, Check, Loader2, PartyPopper, Upload } from "lucide-react";
 import { submitApplication, type ApplyState } from "@/app/actions";
 import { useUploadForm } from "@/lib/useUploadForm";
-import { products, regions } from "@/lib/site";
+import { cedis, products, regions } from "@/lib/site";
 import { ProductIcon } from "@/components/ProductIcon";
+import { PayButton } from "@/components/pay/PayButton";
 
 const steps = ["Choose cover", "Your details", "Confirm"];
 
-export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
+export function ApplyForm({ initialProduct, paymentsEnabled }: { initialProduct?: string; paymentsEnabled: boolean }) {
   const { state, onSubmit, busy, uploading, error } = useUploadForm<ApplyState>(submitApplication, {}, { document: "document" });
   const [step, setStep] = useState(0);
   const [productSlug, setProductSlug] = useState(
@@ -20,6 +21,7 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
   const [fileName, setFileName] = useState("");
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const product = products.find((p) => p.slug === productSlug)!;
+  const price = product.plans.find((pl) => pl.name === plan)?.monthly;
 
   const next = () => {
     // Only move on when every field in the current step is valid.
@@ -37,15 +39,23 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
         </span>
         <h2 className="mt-8 text-4xl font-medium text-forest-950">Thank you, {state.name}!</h2>
         <p className="mx-auto mt-4 max-w-md text-muted">
-          Your application has been received. An advisor will call you within one working day.
+          Your application has been received and we&apos;ve sent you an SMS. An advisor will call you within one working day.
         </p>
         <div className="mx-auto mt-8 inline-block rounded-2xl border border-dashed border-forest-900/25 bg-forest-50 px-8 py-5">
           <p className="text-xs uppercase tracking-[0.2em] text-muted">Your reference number</p>
           <p className="mt-1 font-display text-3xl font-semibold tracking-wide text-forest-900">{state.reference}</p>
         </div>
-        <div className="mt-10">
-          <Link href="/" className="btn btn-primary">Back to home</Link>
-        </div>
+        {paymentsEnabled ? (
+          <div className="mx-auto mt-10 max-w-sm">
+            <p className="mb-4 text-sm font-medium text-forest-950">Start your cover now by paying your first month&apos;s premium:</p>
+            <PayButton reference={state.reference!} amount={state.amount!} />
+            <p className="mt-4 text-xs text-muted">Prefer to pay later? Use the link in your SMS.</p>
+          </div>
+        ) : (
+          <div className="mt-10">
+            <Link href="/" className="btn btn-primary">Back to home</Link>
+          </div>
+        )}
       </div>
     );
   }
@@ -96,10 +106,11 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
         <p className="label mt-8">Choose a plan *</p>
         <div className="flex flex-wrap gap-2">
           {product.plans.map((pl) => (
-            <label key={pl} className="cursor-pointer">
-              <input type="radio" name="plan" value={pl} required checked={plan === pl} onChange={() => setPlan(pl)} className="peer sr-only" />
-              <span className="block rounded-full border border-forest-900/15 px-5 py-2.5 text-sm font-medium transition peer-checked:border-forest-900 peer-checked:bg-forest-900 peer-checked:text-cream peer-focus-visible:ring-4 peer-focus-visible:ring-gold-200">
-                {pl}
+            <label key={pl.name} className="cursor-pointer">
+              <input type="radio" name="plan" value={pl.name} required checked={plan === pl.name} onChange={() => setPlan(pl.name)} className="peer sr-only" />
+              <span className="block rounded-2xl border border-forest-900/15 px-5 py-2.5 text-sm font-medium transition peer-checked:border-forest-900 peer-checked:bg-forest-900 peer-checked:text-cream peer-focus-visible:ring-4 peer-focus-visible:ring-gold-200">
+                {pl.name}
+                <span className="block text-xs font-normal opacity-70">{cedis(pl.monthly)} / month</span>
               </span>
             </label>
           ))}
@@ -116,7 +127,7 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
           </div>
           <div>
             <label className="label" htmlFor="phone">Phone (MoMo number) *</label>
-            <input id="phone" name="phone" required type="tel" pattern="[0-9+ ]{10,15}" className="field" placeholder="024 000 0000" autoComplete="tel" />
+            <input id="phone" name="phone" required type="tel" pattern="[0-9+ \-]{10,17}" className="field" placeholder="024 000 0000" autoComplete="tel" />
           </div>
           <div>
             <label className="label" htmlFor="email">Email</label>
@@ -147,6 +158,7 @@ export function ApplyForm({ initialProduct }: { initialProduct?: string }) {
           <div>
             <p className="text-xs uppercase tracking-[0.18em] text-cream/50">Selected cover</p>
             <p className="mt-1 font-display text-2xl">{product.name} · {plan || "—"}</p>
+            {price && <p className="mt-1 text-sm text-gold-400">{cedis(price)} per month</p>}
           </div>
           <button type="button" onClick={() => setStep(0)} className="text-sm font-semibold text-gold-400 hover:underline">Change</button>
         </div>

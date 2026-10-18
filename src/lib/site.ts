@@ -17,7 +17,7 @@ export const products = [
     icon: "HeartPulse",
     summary: "Hospital bills, outpatient visits and medicines covered for you and your family.",
     from: "GH₵ 2 / day",
-    plans: ["Basic", "Family", "Premium"],
+    plans: [{ name: "Basic", monthly: 60 }, { name: "Family", monthly: 120 }, { name: "Premium", monthly: 200 }],
     benefits: ["Outpatient & inpatient care", "Maternity support", "Nationwide hospital network"],
   },
   {
@@ -26,7 +26,7 @@ export const products = [
     icon: "Sprout",
     summary: "Peace of mind that the people you love are cared for, whatever happens.",
     from: "GH₵ 1 / day",
-    plans: ["Individual", "Family", "Education Saver"],
+    plans: [{ name: "Individual", monthly: 30 }, { name: "Family", monthly: 75 }, { name: "Education Saver", monthly: 150 }],
     benefits: ["Lump-sum payout to family", "Funeral cover within 48 hours", "Optional savings plan"],
   },
   {
@@ -35,7 +35,7 @@ export const products = [
     icon: "CarFront",
     summary: "Comprehensive and third-party cover for private cars, taxis and trotros.",
     from: "GH₵ 5 / day",
-    plans: ["Third Party", "Third Party, Fire & Theft", "Comprehensive"],
+    plans: [{ name: "Third Party", monthly: 150 }, { name: "Third Party, Fire & Theft", monthly: 220 }, { name: "Comprehensive", monthly: 400 }],
     benefits: ["24/7 roadside help", "Fast claims in 7 days", "Commercial vehicle options"],
   },
   {
@@ -44,7 +44,7 @@ export const products = [
     icon: "Store",
     summary: "Protect your home, shop and stock against fire, flood and theft.",
     from: "GH₵ 3 / day",
-    plans: ["Home", "Shop & Stock", "Home + Shop"],
+    plans: [{ name: "Home", monthly: 90 }, { name: "Shop & Stock", monthly: 130 }, { name: "Home + Shop", monthly: 200 }],
     benefits: ["Fire, flood & burglary", "Stock replacement", "Market trader packages"],
   },
 ] as const;
@@ -94,3 +94,10 @@ export const regions = [
   "Greater Accra", "Ashanti", "Western", "Central", "Eastern", "Volta", "Northern", "Upper East",
   "Upper West", "Bono", "Bono East", "Ahafo", "Western North", "Oti", "Savannah", "North East",
 ];
+
+/** Monthly premium in GH₵ for a product + plan, or undefined if the combination doesn't exist. */
+export function planPrice(productName: string, planName: string): number | undefined {
+  return products.find((p) => p.name === productName)?.plans.find((pl) => pl.name === planName)?.monthly;
+}
+
+export const cedis = (amount: number) => `GH₵ ${amount.toLocaleString("en-GH")}`;

@@ -5,7 +5,7 @@ import { PageHero } from "@/components/PageHero";
 import { ProductIcon } from "@/components/ProductIcon";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/CtaBand";
-import { products } from "@/lib/site";
+import { cedis, products } from "@/lib/site";
 
 export const metadata: Metadata = { title: "Insurance Plans" };
 
@@ -41,8 +41,8 @@ export default function InsurancePage() {
                 </ul>
                 <div className="mt-6 flex flex-wrap gap-2">
                   {p.plans.map((plan) => (
-                    <span key={plan} className={`rounded-full px-3 py-1 text-xs font-medium ${i % 2 ? "bg-cream/10" : "bg-forest-50 text-forest-800"}`}>
-                      {plan}
+                    <span key={plan.name} className={`rounded-full px-3 py-1 text-xs font-medium ${i % 2 ? "bg-cream/10" : "bg-forest-50 text-forest-800"}`}>
+                      {plan.name} · {cedis(plan.monthly)}/mo
                     </span>
                   ))}
                 </div>

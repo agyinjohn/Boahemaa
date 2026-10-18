@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CirclePlay, ClipboardList, ExternalLink, LayoutDashboard, LogOut, Newspaper, Users } from "lucide-react";
+import { CirclePlay, ClipboardList, ExternalLink, LayoutDashboard, LogOut, MessageSquare, Newspaper, Users } from "lucide-react";
 import { logout } from "@/app/actions";
 import { LogoMark } from "@/components/Logo";
 
@@ -12,6 +12,7 @@ const links = [
   { href: "/admin/news", label: "News stories", icon: Newspaper },
   { href: "/admin/videos", label: "Videos", icon: CirclePlay },
   { href: "/admin/team", label: "Team photos", icon: Users },
+  { href: "/admin/sms", label: "SMS log", icon: MessageSquare },
 ];
 
 export function AdminNav({ pending }: { pending: number }) {

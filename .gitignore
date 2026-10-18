@@ -7,5 +7,7 @@ next-env.d.ts
 # Runtime data created by the site (applications + uploaded files)
 data/applications.json
 data/team-photos.json
+data/sms.json
 data/uploads/*
 !data/uploads/.gitkeep
+data/*.tmp

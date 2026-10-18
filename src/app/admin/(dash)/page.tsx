@@ -1,19 +1,23 @@
 import Link from "next/link";
-import { ArrowUpRight, ClipboardList, Clock, Newspaper, CirclePlay } from "lucide-react";
+import { ArrowUpRight, Banknote, ClipboardList, Clock, Newspaper, CirclePlay } from "lucide-react";
+import { cedis } from "@/lib/site";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
 import { AdminHeader } from "@/components/admin/AdminHeader";
 import { StatusBadge } from "@/components/admin/StatusBadge";
+import { Integrations } from "@/components/admin/Integrations";
 
 export default async function AdminHome() {
   const [applications, news, videos] = await Promise.all([db.list("applications"), db.list("news"), db.list("videos")]);
   const pending = applications.filter((a) => a.status === "Pending").length;
+  const collected = applications.reduce((sum, a) => sum + (a.payment?.amount ?? 0), 0);
+  const paidCount = applications.filter((a) => a.payment).length;
 
   const cards = [
     { label: "Applications", value: applications.length, icon: ClipboardList, href: "/admin/applications", tone: "bg-forest-900 text-cream" },
     { label: "Awaiting review", value: pending, icon: Clock, href: "/admin/applications?status=Pending", tone: "bg-gold-500 text-forest-950" },
-    { label: "News stories", value: news.length, icon: Newspaper, href: "/admin/news", tone: "bg-white" },
-    { label: "Videos", value: videos.length, icon: CirclePlay, href: "/admin/videos", tone: "bg-white" },
+    { label: `Premiums collected (${paidCount} paid)`, value: cedis(collected), icon: Banknote, href: "/admin/applications", tone: "bg-white" },
+    { label: "News & videos", value: news.length + videos.length, icon: Newspaper, href: "/admin/news", tone: "bg-white" },
   ];
 
   return (
@@ -32,6 +36,8 @@ export default async function AdminHome() {
         ))}
       </div>
 
+      <div className="mt-6"><Integrations /></div>
+
       <section className="mt-10 rounded-3xl bg-white p-6 shadow-sm md:p-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-medium text-forest-950">Recent applications</h2>
@@ -47,7 +53,10 @@ export default async function AdminHome() {
                   <p className="font-semibold text-forest-950">{a.fullName}</p>
                   <p className="text-sm text-muted">{a.product} · {a.plan} · {formatDate(a.createdAt)}</p>
                 </div>
-                <StatusBadge status={a.status} />
+                <span className="flex items-center gap-2">
+                  {a.payment && <span className="rounded-full bg-forest-900 px-2.5 py-1 text-xs font-semibold text-gold-400">Paid</span>}
+                  <StatusBadge status={a.status} />
+                </span>
               </li>
             ))}
           </ul>

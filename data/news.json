@@ -30,5 +30,14 @@
     "body": "SUSU BOX has officially opened a new branch on Central Market Road in Tamale, our first full branch in the north of Ghana.\n\nThe branch offers all SUSU BOX products, claims support and agent training, and is staffed by a team fluent in Dagbani, Hausa and English.\n\nThe opening was attended by local chiefs, market leaders and members of the Okada Riders Association.",
     "category": "Announcement",
     "createdAt": "2026-07-30T09:00:00.000Z"
+  },
+  {
+    "id": "95afb9bb-2622-4623-9db1-f11bf5ceec07",
+    "title": "Test story with image",
+    "body": "Para one.\r\n\r\nPara two.",
+    "excerpt": "Para one.\r\n\r\nPara…",
+    "category": "News",
+    "image": "/uploads/1792342721157-47294ab7.png",
+    "createdAt": "2026-10-18T16:58:41.158Z"
   }
 ]

@@ -14,8 +14,10 @@ A school-project website for **SUSU BOX**, a fictional Ghanaian insurance compan
 | **News** (`/news`) | News stories with category filter and article pages |
 | **Videos** (`/videos`) | YouTube or uploaded videos |
 | **Contact** (`/contact`) | Phone, WhatsApp, email, branches, map |
-| **Apply** (`/apply`) | Application form in 3 steps with ID upload and a reference number |
-| **Admin** (`/admin`) | Password-protected dashboard to **publish news, upload videos, upload team photos and review applications** |
+| **Apply** (`/apply`) | Application form in 3 steps with ID upload, a reference number and **online payment** |
+| **Pay** (`/pay/<reference>`) | Pay the first premium by **Mobile Money or card through Paystack** (link is also sent by SMS) |
+| **SMS** | **mNotify** texts customers when they apply, pay, and when their application is approved/rejected |
+| **Admin** (`/admin`) | Password-protected dashboard to **publish news, upload videos, upload team photos, review applications and payments, and see every SMS sent** |
 
 ## Run it
 
@@ -48,6 +50,31 @@ In cloud mode, files are uploaded **straight from the browser to Cloudinary**, s
 
 `data/news.json` holds 4 sample stories. They show on a fresh deployment until the first change is saved.
 
+## Payments (Paystack) and SMS (mNotify)
+
+**How it works**
+
+1. A customer applies. The price is the plan's monthly premium from `src/lib/site.ts`, always worked out on the server.
+2. They get an SMS with their reference number and a payment link, and can pay straight away on the success screen.
+3. **Pay** opens Paystack's secure checkout (MTN MoMo, Telecel Cash, AirtelTigo Money, Visa, Mastercard).
+4. Paystack sends them back to `/pay/callback`. The site **verifies the payment with Paystack**, marks the application paid and sends an SMS receipt. The webhook at `/api/paystack/webhook` does the same if they close the browser early. A payment is only recorded once.
+5. When staff change an application to *Under Review*, *Approved* or *Rejected*, the customer gets an SMS.
+
+**Admin**
+
+- **Applications** shows Paid/Unpaid, the amount and payment method, and a *Resend payment link by SMS* button.
+- **SMS log** lists every message with its status: `sent`, `failed` (with mNotify's error) or `simulated`. It also has a *Send a test SMS* form.
+- **Overview** shows premiums collected and whether Paystack and mNotify are connected.
+
+**Setting it up**
+
+| Service | What to do |
+|---|---|
+| **Paystack** | Create an account at [paystack.com](https://paystack.com) (Ghana). Copy the **test secret key** (`sk_test_…`) from *Settings → API Keys & Webhooks* into `PAYSTACK_SECRET_KEY`. On the same page set the **webhook URL** to `https://<your-site>/api/paystack/webhook`. Test payments use Paystack's test cards and test MoMo numbers; no real money moves. Switch to the `sk_live_…` key only once the business is verified. |
+| **mNotify** | Create an account at [mnotify.com](https://www.mnotify.com), buy some SMS credit, and **register a sender ID** (e.g. `SUSUBOX`; approval can take a day or two). Put the API key in `MNOTIFY_API_KEY` and the sender ID in `MNOTIFY_SENDER_ID`. Optionally set `ADMIN_SMS_PHONE` to get a text for every new application. |
+
+Without these keys the site still works: the Pay button is hidden, and SMS messages are recorded in the SMS log as `simulated`, which is handy for a demo.
+
 ## Deploy to Vercel
 
 1. **Cloudinary:** create a free account at [cloudinary.com](https://cloudinary.com). On the dashboard, copy your *Cloud name*, *API key* and *API secret*.
@@ -55,6 +82,7 @@ In cloud mode, files are uploaded **straight from the browser to Cloudinary**, s
 3. **Redis:** in the Vercel project, open **Storage → Create → Upstash for Redis** (free plan) and connect it to the project. Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you.
 4. **Environment variables:** in **Settings → Environment Variables**, add:
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
+   - `PAYSTACK_SECRET_KEY`, `MNOTIFY_API_KEY`, `MNOTIFY_SENDER_ID` (see the section above)
    - `ADMIN_PASSWORD` (choose your own) and `SESSION_SECRET` (any long random text)
 5. **Redeploy** (Deployments → ⋯ → Redeploy) so the new variables take effect.
 

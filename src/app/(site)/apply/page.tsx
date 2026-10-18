@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
-import { Clock, Lock, PhoneCall } from "lucide-react";
+import { Clock, Lock, PhoneCall, Smartphone } from "lucide-react";
 import { ApplyForm } from "./ApplyForm";
+import { paystackEnabled } from "@/lib/paystack";
 
 export const metadata: Metadata = { title: "Apply Online" };
 
@@ -23,6 +24,7 @@ export default async function ApplyPage({ searchParams }: { searchParams: Promis
             {[
               { icon: Clock, title: "About 5 minutes", text: "Three short steps, no paperwork." },
               { icon: PhoneCall, title: "Call back within 1 day", text: "A real advisor confirms your plan." },
+              { icon: Smartphone, title: "Pay with MoMo or card", text: "Secure checkout by Paystack." },
               { icon: Lock, title: "Your data is safe", text: "Only SUSU BOX staff can see your details." },
             ].map((f) => (
               <li key={f.title} className="flex gap-4">
@@ -37,7 +39,7 @@ export default async function ApplyPage({ searchParams }: { searchParams: Promis
             ))}
           </ul>
         </aside>
-        <ApplyForm initialProduct={product} />
+        <ApplyForm initialProduct={product} paymentsEnabled={paystackEnabled} />
       </div>
     </section>
   );
