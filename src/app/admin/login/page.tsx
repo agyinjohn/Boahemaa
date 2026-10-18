@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { isAdmin } from "@/lib/auth";
 import { LoginForm } from "./LoginForm";
 import { LogoMark } from "@/components/Logo";
+import { turnstileSiteKey } from "@/lib/spam";
 
 export const metadata: Metadata = { title: "Staff login" };
 
@@ -24,7 +25,7 @@ export default async function LoginPage() {
           <LogoMark className="h-14 w-14" />
           <h1 className="mt-8 text-4xl font-medium text-forest-950">Welcome back</h1>
           <p className="mt-2 text-muted">Sign in to manage news, videos and applications.</p>
-          <LoginForm />
+          <LoginForm turnstileSiteKey={turnstileSiteKey} />
         </div>
       </div>
     </main>

@@ -11,7 +11,7 @@ import { initializePayment, paystackEnabled } from "@/lib/paystack";
 import { normalizePhone, sendSms } from "@/lib/sms";
 import { smsAdminNewApplication, smsApplicationReceived, smsStatusChanged } from "@/lib/notify";
 import { siteUrl } from "@/lib/url";
-import { checkSpam, clientIp, rateLimit } from "@/lib/spam";
+import { checkSpam, clientIp, rateLimit, verifyTurnstile } from "@/lib/spam";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 
@@ -145,6 +145,8 @@ export async function login(_: FormState, fd: FormData): Promise<FormState> {
   if (!(await rateLimit(`login:${await clientIp()}`, 10, 15 * 60))) {
     return { error: "Too many sign-in attempts. Please wait 15 minutes and try again." };
   }
+  const captchaError = await verifyTurnstile(fd);
+  if (captchaError) return { error: captchaError };
   if (!checkPassword(text(fd, "password"))) return { error: "Incorrect password." };
   await startSession();
   redirect("/admin");

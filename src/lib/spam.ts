@@ -7,7 +7,9 @@ import { redis } from "@/lib/db";
  * 1. Honeypot: a hidden "website" field people never see but bots fill in.
  * 2. Time check: each form carries a signed timestamp; anything sent within 3 seconds of the
  *    page loading (or with a forged/expired token) is rejected.
- * 3. Rate limit: a maximum number of submissions per IP address per time window
+ * 3. Cloudflare Turnstile (optional): a CAPTCHA, checked with Cloudflare, when
+ *    TURNSTILE_SITE_KEY and TURNSTILE_SECRET_KEY are set.
+ * 4. Rate limit: a maximum number of submissions per IP address per time window
  *    (stored in Redis on Vercel so it holds across servers; in memory locally).
  */
 
@@ -21,6 +23,31 @@ const MAX_AGE_SECONDS = 60 * 60 * 24;
 export function issueFormToken() {
   const ts = String(Date.now());
   return `${ts}.${sign(ts)}`;
+}
+
+const turnstileSecret = process.env.TURNSTILE_SECRET_KEY;
+/** The Turnstile site key to give forms, or null when Turnstile isn't set up. */
+export const turnstileSiteKey = turnstileSecret && process.env.TURNSTILE_SITE_KEY ? process.env.TURNSTILE_SITE_KEY : null;
+
+/** Checks the form's Turnstile token with Cloudflare. Returns an error message, or null if it passed (or Turnstile is off). */
+export async function verifyTurnstile(fd: FormData): Promise<string | null> {
+  if (!turnstileSiteKey) return null;
+  const token = String(fd.get("cf-turnstile-response") ?? "");
+  if (!token) return "Please complete the security check.";
+  try {
+    const res = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+      method: "POST",
+      body: new URLSearchParams({ secret: turnstileSecret!, response: token, remoteip: await clientIp() }),
+      signal: AbortSignal.timeout(10_000),
+    });
+    const json = await res.json();
+    if (json.success) return null;
+    console.warn("Turnstile rejected a submission", json["error-codes"]);
+    return "The security check failed. Please try again.";
+  } catch (err) {
+    console.error("Turnstile verification failed", err);
+    return "We couldn't run the security check. Please try again.";
+  }
 }
 
 export async function clientIp() {
@@ -64,6 +91,9 @@ export async function checkSpam(fd: FormData, form: string, limit = 5, windowSec
     return { ok: false, error: "This form has expired. Please refresh the page and try again." };
   }
   if (age < MIN_SECONDS) return { ok: false, error: "That was quick! Please check your details and submit again." };
+
+  const captchaError = await verifyTurnstile(fd);
+  if (captchaError) return { ok: false, error: captchaError };
 
   if (!(await rateLimit(`${form}:${await clientIp()}`, limit, windowSeconds))) {
     return { ok: false, error: "Too many submissions from your connection. Please try again in an hour or call us." };

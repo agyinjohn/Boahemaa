@@ -3,7 +3,7 @@ import { Clock, Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 import { PageHero } from "@/components/PageHero";
 import { Reveal } from "@/components/Reveal";
 import { company } from "@/lib/site";
-import { issueFormToken } from "@/lib/spam";
+import { issueFormToken, turnstileSiteKey } from "@/lib/spam";
 import { ContactForm } from "./ContactForm";
 
 export const metadata: Metadata = { title: "Contact" };
@@ -47,7 +47,7 @@ export default function ContactPage() {
       </section>
       <section className="container-x grid gap-6 pb-6 lg:grid-cols-[1.4fr_1fr]">
         <Reveal>
-          <ContactForm formToken={issueFormToken()} />
+          <ContactForm formToken={issueFormToken()} turnstileSiteKey={turnstileSiteKey} />
         </Reveal>
         <Reveal delay={100}>
           <div className="flex h-full flex-col rounded-[2rem] bg-forest-900 p-10 text-cream">

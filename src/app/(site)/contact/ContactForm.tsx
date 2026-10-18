@@ -1,14 +1,16 @@
 "use client";
 
-import { startTransition, useActionState, useEffect, useRef } from "react";
+import { startTransition, useActionState, useEffect, useRef, useState } from "react";
 import { CircleCheck, Loader2, Send } from "lucide-react";
 import { sendMessage, type FormState } from "@/app/actions";
 import { CONTACT_TOPICS } from "@/lib/site";
 import { SpamTrap } from "@/components/SpamTrap";
+import { Turnstile } from "@/components/Turnstile";
 
-export function ContactForm({ formToken }: { formToken: string }) {
+export function ContactForm({ formToken, turnstileSiteKey }: { formToken: string; turnstileSiteKey: string | null }) {
   const [state, action, pending] = useActionState<FormState, FormData>(sendMessage, {});
   const formRef = useRef<HTMLFormElement>(null);
+  const [humanToken, setHumanToken] = useState<string | null>(null);
 
   useEffect(() => {
     if (state.ok) formRef.current?.reset();
@@ -60,8 +62,13 @@ export function ContactForm({ formToken }: { formToken: string }) {
           <textarea id="cmessage" name="message" required rows={5} maxLength={2000} className="field" placeholder="How can we help?" />
         </div>
       </div>
+      {turnstileSiteKey && (
+        <div className="mt-6">
+          <Turnstile siteKey={turnstileSiteKey} action="contact" onVerify={setHumanToken} resetKey={state} />
+        </div>
+      )}
       {state.error && <p className="mt-5 rounded-xl bg-clay-500/10 px-4 py-3 text-sm text-clay-500">{state.error}</p>}
-      <button disabled={pending} className="btn btn-primary mt-8">
+      <button disabled={pending || (!!turnstileSiteKey && !humanToken)} className="btn btn-primary mt-8">
         {pending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />} Send message
       </button>
     </form>

@@ -81,7 +81,10 @@ The application form, contact form and admin login are protected by:
 
 1. **Honeypot:** a hidden field that people never see but bots fill in. Those submissions are quietly dropped (the bot is shown a fake "success").
 2. **Time check:** each form carries a signed timestamp. Submissions sent less than 3 seconds after the page loaded, or with a forged or expired (over 24 hours) token, are rejected.
-3. **Rate limits per IP address:** 5 applications and 5 contact messages per hour, and 10 login attempts per 15 minutes. On Vercel the counts are kept in Redis so they apply across all servers. This also stops bots from using up your SMS credit.
+3. **Cloudflare Turnstile (optional):** a free CAPTCHA that most visitors pass without clicking anything. The Submit/Sign in button unlocks once the check passes, and the server confirms every token with Cloudflare.
+4. **Rate limits per IP address:** 5 applications and 5 contact messages per hour, and 10 login attempts per 15 minutes. On Vercel the counts are kept in Redis so they apply across all servers. This also stops bots from using up your SMS credit.
+
+**Turning on Turnstile:** in the [Cloudflare dashboard](https://dash.cloudflare.com) open **Turnstile → Add widget**, choose *Managed* mode, and add your site's domain (plus `localhost` for local testing). Copy the keys into `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY`, then redeploy. To try it without an account, use Cloudflare's test keys: site key `1x00000000000000000000AA` and secret `1x0000000000000000000000000000000AA` (always pass). Without the keys, the other three protections still apply.
 
 The limits are set in `src/app/actions.ts` (`checkSpam(fd, "apply")`, `rateLimit("login:…", 10, 15 * 60)`).
 
@@ -93,6 +96,7 @@ The limits are set in `src/app/actions.ts` (`checkSpam(fd, "apply")`, `rateLimit
 4. **Environment variables:** in **Settings → Environment Variables**, add:
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
    - `PAYSTACK_SECRET_KEY`, `MNOTIFY_API_KEY`, `MNOTIFY_SENDER_ID` (see the section above)
+   - optionally `TURNSTILE_SITE_KEY` and `TURNSTILE_SECRET_KEY` (see *Spam protection*)
    - `ADMIN_PASSWORD` (choose your own) and `SESSION_SECRET` (any long random text)
 5. **Redeploy** (Deployments → ⋯ → Redeploy) so the new variables take effect.
 
