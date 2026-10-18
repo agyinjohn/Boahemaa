@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+@theme {
+  --color-forest-950: #06231a;
+  --color-forest-900: #0b3326;
+  --color-forest-800: #114433;
+  --color-forest-700: #175a43;
+  --color-forest-600: #1f7356;
+  --color-forest-100: #dcebe3;
+  --color-forest-50: #eef6f1;
+  --color-gold-600: #b9781a;
+  --color-gold-500: #d99a2b;
+  --color-gold-400: #e8b44f;
+  --color-gold-200: #f5dca6;
+  --color-gold-100: #fbeed2;
+  --color-clay-500: #c4553a;
+  --color-cream: #fbf7ef;
+  --color-sand: #f3ecdd;
+  --color-ink: #17201c;
+  --color-muted: #5d6b64;
+
+  --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-fraunces), ui-serif, Georgia, serif;
+
+  --animate-marquee: marquee 40s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-rise: rise 0.8s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+
+  @keyframes marquee {
+    to { transform: translateX(-50%); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0) rotate(var(--r, 0deg)); }
+    50% { transform: translateY(-12px) rotate(var(--r, 0deg)); }
+  }
+  @keyframes rise {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: none; }
+  }
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-cream text-ink font-sans antialiased;
+    overflow-x: clip;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display tracking-tight;
+    font-variation-settings: "SOFT" 50, "WONK" 0;
+  }
+  ::selection { @apply bg-gold-200 text-forest-950; }
+}
+
+@layer components {
+  .container-x { @apply mx-auto w-full max-w-7xl px-5 sm:px-8; }
+
+  .eyebrow {
+    @apply inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.22em] text-gold-600;
+  }
+  .eyebrow::before { content: ""; @apply h-px w-8 bg-current; }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold transition duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-500 disabled:opacity-60;
+  }
+  .btn-primary { @apply bg-forest-900 text-cream hover:bg-forest-700 shadow-[0_10px_30px_-12px_rgba(11,51,38,0.6)]; }
+  .btn-gold { @apply bg-gold-500 text-forest-950 hover:bg-gold-400 shadow-[0_10px_30px_-12px_rgba(217,154,43,0.8)]; }
+  .btn-ghost { @apply border border-forest-900/15 text-forest-900 hover:border-forest-900 hover:bg-forest-900 hover:text-cream; }
+  .btn-ghost-light { @apply border border-cream/25 text-cream hover:bg-cream hover:text-forest-950; }
+
+  .card {
+    @apply rounded-3xl border border-forest-900/8 bg-white/70 shadow-[0_1px_0_rgba(23,32,28,0.04),0_20px_50px_-30px_rgba(23,32,28,0.25)] backdrop-blur;
+  }
+
+  .field { @apply block w-full rounded-2xl border border-forest-900/12 bg-white px-4 py-3 text-sm text-ink outline-none transition placeholder:text-muted/60 focus:border-forest-600 focus:ring-4 focus:ring-forest-600/10; }
+  .label { @apply mb-1.5 block text-sm font-medium text-forest-900; }
+
+  /* Kente-inspired woven pattern, used as the brand's signature texture */
+  .kente {
+    background-color: var(--color-forest-900);
+    background-image:
+      repeating-linear-gradient(90deg, transparent 0 22px, rgba(217,154,43,0.55) 22px 26px, transparent 26px 34px, rgba(196,85,58,0.45) 34px 36px, transparent 36px 56px),
+      repeating-linear-gradient(0deg, transparent 0 22px, rgba(217,154,43,0.35) 22px 26px, transparent 26px 34px, rgba(251,247,239,0.12) 34px 36px, transparent 36px 56px);
+  }
+  .kente-strip {
+    background-image: repeating-linear-gradient(90deg,
+      var(--color-gold-500) 0 18px, var(--color-forest-900) 18px 24px,
+      var(--color-clay-500) 24px 30px, var(--color-forest-900) 30px 36px,
+      var(--color-gold-400) 36px 44px, var(--color-forest-700) 44px 56px);
+  }
+  .grain::after {
+    content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0.07; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+}

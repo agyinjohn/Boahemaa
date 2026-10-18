@@ -18,7 +18,7 @@
 
 ---
 
-## Pages (7 total)
+## Pages
 
 1. **Home**: banner, short intro, 3–4 insurance types (Health, Motor, Life, Property), latest news, "Apply Now" button
 2. **About**: history timeline, mission & vision
@@ -32,22 +32,14 @@ Every page shares one header (logo + menu) and one footer (contact info).
 
 ---
 
-## Tech (keep it simple)
+## Tech
 
-**Recommended:** HTML + CSS + JavaScript for the pages, and **PHP + MySQL** (run locally with XAMPP) for the parts that need saving:
-- Apply form → saves to an `applications` table
-- Admin → adds rows to a `news` table (title, text, image, YouTube link)
-- News page → reads from the `news` table
+**Next.js (React + Node.js) + Tailwind CSS**, chosen for a more polished, modern UI.
+- Pages and UI: Next.js App Router + Tailwind CSS
+- Saving data: Next.js server actions (Node.js) writing to JSON files in `data/` (no database setup needed)
+- Admin: password login (cookie session) to publish news/videos and review applications
 
-Database (3 tables):
-```
-applications (id, full_name, phone, email, insurance_type, message, created_at)
-news         (id, title, body, image, video_url, created_at)
-admins       (id, username, password_hash)
-```
-
-**Alternatives if the course uses something else:** Firebase (no PHP needed) or plain WordPress.
-Use whatever the lecturer expects; check the assignment guidelines.
+See `README.md` for how to run it.
 
 ---
 

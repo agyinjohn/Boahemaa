@@ -1,0 +1,10 @@
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+.env*.local
+# Runtime data created by the site (applications + uploaded files)
+data/applications.json
+data/uploads/*
+!data/uploads/.gitkeep
