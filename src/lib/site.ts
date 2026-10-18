@@ -76,23 +76,23 @@ export const values = [
 ];
 
 export const team = [
-  { slug: "akosua-mensah", name: "Akosua Mensah", role: "Chief Executive Officer", dept: "Leadership", bio: "Founded SUSU BOX after 15 years in microfinance." },
-  { slug: "kwame-asante", name: "Kwame Asante", role: "Chief Operations Officer", dept: "Leadership", bio: "Leads our branches, agents and customer care." },
-  { slug: "efua-owusu", name: "Efua Owusu", role: "Head of Underwriting", dept: "Leadership", bio: "Designs plans that fit real lives and real budgets." },
-  { slug: "yaw-darko", name: "Yaw Darko", role: "Head of Claims", dept: "Operations", bio: "Keeps our promise of paying claims within 7 days." },
-  { slug: "abena-kyei", name: "Abena Kyei", role: "Customer Experience Lead", dept: "Operations", bio: "Makes sure every customer is heard and helped." },
-  { slug: "kofi-boateng", name: "Kofi Boateng", role: "Lead Engineer", dept: "Technology", bio: "Builds the tools behind our mobile money payments." },
-  { slug: "ama-serwaa", name: "Ama Serwaa", role: "Marketing Manager", dept: "Marketing", bio: "Tells the SUSU BOX story across Ghana." },
-  { slug: "nana-yeboah", name: "Nana Yeboah", role: "Field Agent Coordinator", dept: "Operations", bio: "Supports our 600+ agents in markets nationwide." },
+  { slug: "akosua-mensah", name: "Akosua Mensah", role: "Chief Executive Officer", dept: "Leadership", bio: "Founded SUSU BOX after 15 years in microfinance.", photo: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=900&auto=format&fit=crop&q=80" },
+  { slug: "kwame-asante", name: "Kwame Asante", role: "Chief Operations Officer", dept: "Leadership", bio: "Leads our branches, agents and customer care.", photo: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=900&auto=format&fit=crop&q=80" },
+  { slug: "efua-owusu", name: "Efua Owusu", role: "Head of Underwriting", dept: "Leadership", bio: "Designs plans that fit real lives and real budgets.", photo: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=900&auto=format&fit=crop&q=80" },
+  { slug: "yaw-darko", name: "Yaw Darko", role: "Head of Claims", dept: "Operations", bio: "Keeps our promise of paying claims within 7 days.", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80" },
+  { slug: "abena-kyei", name: "Abena Kyei", role: "Customer Experience Lead", dept: "Operations", bio: "Makes sure every customer is heard and helped.", photo: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=600&auto=format&fit=crop&q=80" },
+  { slug: "kofi-boateng", name: "Kofi Boateng", role: "Lead Engineer", dept: "Technology", bio: "Builds the tools behind our mobile money payments.", photo: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=600&auto=format&fit=crop&q=80" },
+  { slug: "ama-serwaa", name: "Ama Serwaa", role: "Marketing Manager", dept: "Marketing", bio: "Tells the SUSU BOX story across Ghana.", photo: "https://images.unsplash.com/photo-1614644147798-f8c0fc9da7f6?w=600&auto=format&fit=crop&q=80" },
+  { slug: "nana-yeboah", name: "Nana Yeboah", role: "Field Agent Coordinator", dept: "Operations", bio: "Supports our 600+ agents in markets nationwide.", photo: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&auto=format&fit=crop&q=80" },
 ];
 
 export const projects = [
-  { title: "Market Women Health Drive", place: "Makola, Accra", year: "2024", tag: "Health", text: "Free health screenings and enrolment for 3,000 market traders, with 6 months of subsidised cover." },
-  { title: "Okada Rider Safety Programme", place: "Kumasi", year: "2023", tag: "Motor", text: "Helmets, road-safety training and accident cover for 1,200 commercial riders." },
-  { title: "Fire-Safe Markets", place: "Kantamanto & Kejetia", year: "2023", tag: "Property", text: "Installed fire extinguishers and trained traders after market fire outbreaks." },
-  { title: "School Fees Saver", place: "Tamale", year: "2022", tag: "Education", text: "A savings-linked life plan that guarantees a child's school fees if a parent passes away." },
-  { title: "Farmers' Weather Cover Pilot", place: "Bono East", year: "2022", tag: "Agriculture", text: "Piloted crop cover that pays out automatically when rainfall falls below normal." },
-  { title: "Financial Literacy Tour", place: "16 regions", year: "2021", tag: "Community", text: "Workshops reaching 20,000 people on saving, budgeting and how insurance works." },
+  { title: "Market Women Health Drive", place: "Makola, Accra", year: "2024", tag: "Health", text: "Free health screenings and enrolment for 3,000 market traders, with 6 months of subsidised cover.", image: "https://images.unsplash.com/photo-1576091160550-2173dba999ef?w=1400&auto=format&fit=crop&q=80" },
+  { title: "Okada Rider Safety Programme", place: "Kumasi", year: "2023", tag: "Motor", text: "Helmets, road-safety training and accident cover for 1,200 commercial riders.", image: "https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=800&auto=format&fit=crop&q=80" },
+  { title: "Fire-Safe Markets", place: "Kantamanto & Kejetia", year: "2023", tag: "Property", text: "Installed fire extinguishers and trained traders after market fire outbreaks.", image: "https://images.unsplash.com/photo-1486325212027-8081e485255e?w=800&auto=format&fit=crop&q=80" },
+  { title: "School Fees Saver", place: "Tamale", year: "2022", tag: "Education", text: "A savings-linked life plan that guarantees a child's school fees if a parent passes away.", image: "https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&auto=format&fit=crop&q=80" },
+  { title: "Farmers' Weather Cover Pilot", place: "Bono East", year: "2022", tag: "Agriculture", text: "Piloted crop cover that pays out automatically when rainfall falls below normal.", image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=800&auto=format&fit=crop&q=80" },
+  { title: "Financial Literacy Tour", place: "16 regions", year: "2021", tag: "Community", text: "Workshops reaching 20,000 people on saving, budgeting and how insurance works.", image: "https://images.unsplash.com/photo-1524178232363-1fb2b075b655?w=800&auto=format&fit=crop&q=80" },
 ];
 
 export const CONTACT_TOPICS = ["General enquiry", "Claims", "Payments", "Become an agent", "Complaint"];
