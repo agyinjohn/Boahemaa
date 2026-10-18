@@ -84,8 +84,11 @@ export default async function HomePage() {
 
           {/* Artistic composition */}
           <div className="relative mx-auto aspect-[4/5] w-full max-w-md animate-rise [animation-delay:200ms] lg:max-w-none">
-            <div className="kente absolute inset-x-6 bottom-0 top-10 rounded-t-[12rem] rounded-b-[2.5rem] shadow-2xl grain" />
-            <div className="absolute inset-x-16 bottom-10 top-24 rounded-t-[10rem] rounded-b-[2rem] bg-gradient-to-b from-forest-700 to-forest-950" />
+            <div className="absolute inset-x-6 bottom-0 top-10 overflow-hidden rounded-t-[12rem] rounded-b-[2.5rem] shadow-2xl">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=900&auto=format&fit=crop" alt="Ghanaian market traders" className="h-full w-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-b from-forest-950/20 to-forest-950/60" />
+            </div>
             <div className="absolute left-1/2 top-[40%] -translate-x-1/2 text-center text-cream sm:top-[34%]">
               <p className="font-display text-[5rem] font-light italic leading-none text-gold-400 sm:text-[7rem]">₵1</p>
               <p className="mt-1 whitespace-nowrap text-[10px] uppercase tracking-[0.25em] text-cream/60 sm:text-xs sm:tracking-[0.3em]">a day starts it all</p>
@@ -213,11 +216,13 @@ export default async function HomePage() {
       <section className="container-x grid gap-16 py-28 lg:grid-cols-2 lg:items-center">
         <Reveal>
           <div className="relative">
-            <div className="aspect-[5/6] overflow-hidden rounded-[2.5rem] bg-sand">
+            <div className="aspect-[5/6] overflow-hidden rounded-[2.5rem]">
               <div className="relative flex h-full flex-col justify-end p-10">
-                <div className="kente absolute inset-0 opacity-90 [mask-image:linear-gradient(to_bottom,black_20%,transparent_75%)]" />
-                <p className="relative font-display text-[9rem] font-light leading-none text-forest-950">2012</p>
-                <p className="relative mt-2 max-w-xs text-muted">The year a single savings box in Makola Market started it all.</p>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="https://images.unsplash.com/photo-1596005554384-d293674c91d7?w=900&auto=format&fit=crop" alt="Makola Market Accra" className="absolute inset-0 h-full w-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-forest-950/80 via-forest-950/20 to-transparent" />
+                <p className="relative font-display text-[9rem] font-light leading-none text-cream">2012</p>
+                <p className="relative mt-2 max-w-xs text-cream/70">The year a single savings box in Makola Market started it all.</p>
               </div>
             </div>
             <div className="absolute -bottom-8 -right-4 w-60 rounded-3xl bg-gold-500 p-6 text-forest-950 shadow-xl md:-right-10">
