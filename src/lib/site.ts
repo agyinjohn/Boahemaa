@@ -1,4 +1,5 @@
-// Static content for SUSU BOX. Edit this file to change the text on the public pages.
+// Content for SUSU BOX. Edit this file to change the text on the public pages.
+// `team` and `projects` are only the starting content: after that they are managed in Admin → Team / Projects.
 
 export const company = {
   name: "SUSU BOX",

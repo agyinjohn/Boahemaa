@@ -9,6 +9,8 @@ data/applications.json
 data/team-photos.json
 data/sms.json
 data/messages.json
+data/team.json
+data/projects.json
 data/uploads/*
 !data/uploads/.gitkeep
 data/*.tmp

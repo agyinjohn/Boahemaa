@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db, getTeamPhotos, newId, setTeamPhoto, type ApplicationStatus } from "@/lib/db";
+import { db, newId, type ApplicationStatus } from "@/lib/db";
 import { deleteUpload, signUpload, storeUpload, type UploadKind } from "@/lib/storage";
 import { checkPassword, endSession, isAdmin, requireAdmin, startSession } from "@/lib/auth";
 import { parseYouTubeId } from "@/lib/format";
-import { CONTACT_TOPICS, planPrice, team } from "@/lib/site";
+import { CONTACT_TOPICS, planPrice } from "@/lib/site";
 import { initializePayment, paystackEnabled } from "@/lib/paystack";
 import { normalizePhone, sendSms } from "@/lib/sms";
 import { smsAdminNewApplication, smsApplicationReceived, smsStatusChanged } from "@/lib/notify";
@@ -288,31 +288,101 @@ export async function deleteApplication(fd: FormData) {
   revalidatePath("/admin", "layout");
 }
 
-/* ─────────── Admin: team photos ─────────── */
+/* ─────────── Admin: team & projects ─────────── */
 
-export async function uploadTeamPhoto(_: FormState, fd: FormData): Promise<FormState> {
+/** Uploads/keeps/removes the photo field of a team or project form. Returns the new URL, or an error. */
+async function photoField(fd: FormData, field: string, current: string | undefined) {
+  const uploaded = await storeUpload(fd.get(field), "image");
+  if (uploaded) return uploaded;
+  return fd.get("removeImage") === "on" ? undefined : current;
+}
+
+function afterTeamOrProjectChange() {
+  revalidatePath("/", "layout");
+}
+
+export async function saveTeamMember(_: FormState, fd: FormData): Promise<FormState> {
   await requireAdmin();
-  const slug = text(fd, "slug");
-  if (!team.some((m) => m.slug === slug)) return { error: "Unknown team member." };
-  let url: string | undefined;
+  const fields = {
+    name: text(fd, "name").slice(0, 80),
+    role: text(fd, "role").slice(0, 80),
+    dept: text(fd, "dept").slice(0, 40) || "Operations",
+    bio: text(fd, "bio").slice(0, 200),
+  };
+  if (!fields.name || !fields.role) return { error: "Name and role are required." };
+
+  const existing = text(fd, "id") ? await db.get("team", text(fd, "id")) : undefined;
+  if (text(fd, "id") && !existing) return { error: "This person no longer exists." };
+  let photo: string | undefined;
   try {
-    url = await storeUpload(fd.get("photo"), "image");
+    photo = await photoField(fd, "photo", existing?.photo);
   } catch {
     return { error: "Photo must be JPG, PNG, WEBP or GIF." };
   }
-  if (!url) return { error: "Please choose a photo." };
-  await deleteUpload((await getTeamPhotos())[slug]);
-  await setTeamPhoto(slug, url);
-  revalidatePath("/", "layout");
+
+  if (existing) {
+    await db.update("team", existing.id, { ...fields, photo });
+    if (photo !== existing.photo) await deleteUpload(existing.photo);
+  } else {
+    await db.insert("team", { id: newId(), ...fields, photo, order: await db.nextOrder("team"), createdAt: new Date().toISOString() });
+  }
+  afterTeamOrProjectChange();
+  if (!existing) redirect("/admin/team");
   return { ok: true };
 }
 
-export async function removeTeamPhoto(fd: FormData) {
+export async function deleteTeamMember(fd: FormData) {
   await requireAdmin();
-  const slug = text(fd, "slug");
-  await deleteUpload((await getTeamPhotos())[slug]);
-  await setTeamPhoto(slug, undefined);
-  revalidatePath("/", "layout");
+  const removed = await db.remove("team", text(fd, "id"));
+  await deleteUpload(removed?.photo);
+  afterTeamOrProjectChange();
+}
+
+export async function saveProject(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const fields = {
+    title: text(fd, "title").slice(0, 100),
+    place: text(fd, "place").slice(0, 60),
+    year: text(fd, "year"),
+    tag: text(fd, "tag").slice(0, 30) || "Community",
+    text: text(fd, "text").slice(0, 400),
+  };
+  if (!fields.title || !fields.text) return { error: "Title and description are required." };
+  if (!/^(19|20)\d{2}$/.test(fields.year)) return { error: "Please enter a year like 2024." };
+
+  const existing = text(fd, "id") ? await db.get("projects", text(fd, "id")) : undefined;
+  if (text(fd, "id") && !existing) return { error: "This project no longer exists." };
+  let image: string | undefined;
+  try {
+    image = await photoField(fd, "image", existing?.image);
+  } catch {
+    return { error: "Image must be JPG, PNG, WEBP or GIF." };
+  }
+
+  if (existing) {
+    await db.update("projects", existing.id, { ...fields, image });
+    if (image !== existing.image) await deleteUpload(existing.image);
+  } else {
+    await db.insert("projects", { id: newId(), ...fields, image, order: await db.nextOrder("projects"), createdAt: new Date().toISOString() });
+  }
+  afterTeamOrProjectChange();
+  if (!existing) redirect("/admin/projects");
+  return { ok: true };
+}
+
+export async function deleteProject(fd: FormData) {
+  await requireAdmin();
+  const removed = await db.remove("projects", text(fd, "id"));
+  await deleteUpload(removed?.image);
+  afterTeamOrProjectChange();
+}
+
+/** Moves a team member or project up or down the list. */
+export async function moveItem(fd: FormData) {
+  await requireAdmin();
+  const kind = text(fd, "kind") === "projects" ? "projects" : "team";
+  await db.move(kind, text(fd, "id"), text(fd, "direction") === "up" ? -1 : 1);
+  afterTeamOrProjectChange();
 }
 
 /* ─────────── Admin: SMS ─────────── */

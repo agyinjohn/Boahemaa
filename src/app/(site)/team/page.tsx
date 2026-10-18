@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import { PageHero } from "@/components/PageHero";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand } from "@/components/CtaBand";
-import { team } from "@/lib/site";
-import { getTeamPhotos } from "@/lib/db";
+import { db } from "@/lib/db";
 import { optimizedImage } from "@/lib/format";
 
 export const metadata: Metadata = { title: "Our People" };
@@ -19,7 +18,7 @@ const palettes = [
 const initials = (name: string) => name.split(" ").map((n) => n[0]).slice(0, 2).join("");
 
 export default async function TeamPage() {
-  const photos = await getTeamPhotos();
+  const team = await db.list("team");
   const leaders = team.filter((t) => t.dept === "Leadership");
   const staff = team.filter((t) => t.dept !== "Leadership");
 
@@ -31,19 +30,20 @@ export default async function TeamPage() {
         intro="Over 200 staff and 600 field agents across Ghana work every day to keep families and businesses protected."
       />
 
+      {leaders.length > 0 && (
       <section className="container-x pb-20">
         <Reveal>
           <h2 className="text-3xl font-medium text-forest-950">Leadership</h2>
         </Reveal>
         <div className="mt-10 grid gap-6 md:grid-cols-3">
           {leaders.map((p, i) => (
-            <Reveal key={p.name} delay={i * 100}>
+            <Reveal key={p.id} delay={i * 100}>
               <article className="group">
                 <div className={`relative aspect-[4/5] overflow-hidden rounded-[2rem] bg-gradient-to-br ${palettes[i % palettes.length]}`}>
                   <div className="kente absolute inset-0 opacity-20 mix-blend-overlay transition-opacity duration-700 group-hover:opacity-40" />
-                  {photos[p.slug] ? (
+                  {p.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={optimizedImage(photos[p.slug], 900)} alt={p.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
+                    <img src={optimizedImage(p.photo, 900)} alt={p.name} className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105" />
                   ) : (
                     <span className="absolute inset-0 grid place-items-center font-display text-[8rem] font-light italic text-cream/90 transition-transform duration-700 group-hover:scale-110">
                       {initials(p.name)}
@@ -60,7 +60,9 @@ export default async function TeamPage() {
           ))}
         </div>
       </section>
+      )}
 
+      {staff.length > 0 && (
       <section className="bg-sand py-20">
         <div className="container-x">
           <Reveal>
@@ -68,11 +70,11 @@ export default async function TeamPage() {
           </Reveal>
           <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-5">
             {staff.map((p, i) => (
-              <Reveal key={p.name} delay={i * 80}>
+              <Reveal key={p.id} delay={i * 80}>
                 <article className="card h-full p-6 text-center">
-                  {photos[p.slug] ? (
+                  {p.photo ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={optimizedImage(photos[p.slug], 300)} alt={p.name} className="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-gold-200" />
+                    <img src={optimizedImage(p.photo, 300)} alt={p.name} className="mx-auto h-24 w-24 rounded-full object-cover ring-4 ring-gold-200" />
                   ) : (
                     <span className={`mx-auto grid h-24 w-24 place-items-center rounded-full bg-gradient-to-br font-display text-3xl italic text-cream ${palettes[(i + 1) % palettes.length]}`}>
                       {initials(p.name)}
@@ -87,6 +89,7 @@ export default async function TeamPage() {
           </div>
         </div>
       </section>
+      )}
 
       <CtaBand />
     </>

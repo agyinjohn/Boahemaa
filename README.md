@@ -9,15 +9,15 @@ A school-project website for **SUSU BOX**, a fictional Ghanaian insurance compan
 | **Home** | Hero, insurance products, stats, story teaser, how it works, latest news, testimonials |
 | **Our Story** (`/about`) | Company history timeline, mission, vision & values |
 | **Insurance** (`/insurance`) | All plans with benefits and daily prices |
-| **Our People** (`/team`) | Leadership and staff profiles |
-| **Projects** (`/projects`) | Community projects and programmes |
+| **Our People** (`/team`) | Leadership and staff profiles (managed in Admin → Team) |
+| **Projects** (`/projects`) | Community projects and programmes (managed in Admin → Projects) |
 | **News** (`/news`) | News stories with category filter and article pages |
 | **Videos** (`/videos`) | YouTube or uploaded videos |
 | **Contact** (`/contact`) | Contact form (messages go to Admin → Messages), phone, WhatsApp, email, branches, map |
 | **Apply** (`/apply`) | Application form in 3 steps with ID upload, a reference number and **online payment** |
 | **Pay** (`/pay/<reference>`) | Pay the first premium by **Mobile Money or card through Paystack** (link is also sent by SMS) |
 | **SMS** | **mNotify** texts customers when they apply, pay, and when their application is approved/rejected |
-| **Admin** (`/admin`) | Password-protected dashboard to **publish news, upload videos, upload team photos, review applications and payments, and see every SMS sent** |
+| **Admin** (`/admin`) | Password-protected dashboard to **publish and edit news, upload videos, manage the team and projects, review applications and payments, read contact messages, and see every SMS sent** |
 
 ## Run it
 
@@ -106,9 +106,9 @@ To try cloud mode locally, copy `.env.example` to `.env.local` and fill in the s
 
 ## Editing content
 
-- Company info, products, team, projects, timeline and stats: `src/lib/site.ts`
-- Colours and fonts: `src/app/globals.css`
-- News, videos and team photos: use the admin dashboard (**Admin → Team photos** to upload a photo for each person)
+- **In the admin dashboard:** news stories, videos, team members (with photos) and projects. Team and projects can be added, edited, removed and put in order with the arrows. People in the *Leadership* department appear in the large cards; the first project is the wide featured card.
+- **In code:** company details, insurance products and prices, the history timeline and stats live in `src/lib/site.ts`. The `team` and `projects` lists there are only the starting content, copied in the first time the site runs.
+- **Colours and fonts:** `src/app/globals.css`
 
 ## Project structure
 

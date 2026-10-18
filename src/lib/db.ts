@@ -3,6 +3,7 @@ import path from "path";
 import crypto from "crypto";
 import { Redis } from "@upstash/redis";
 import seedNews from "../../data/news.json";
+import { projects as seedProjects, team as seedTeam } from "@/lib/site";
 
 /*
  * A tiny JSON "database". Each collection is stored as one JSON value:
@@ -86,7 +87,39 @@ export type Message = {
   createdAt: string;
 };
 
-type Collections = { news: News; videos: Video; applications: Application; sms: SmsLog; messages: Message };
+export type TeamMember = {
+  id: string;
+  name: string;
+  role: string;
+  /** Members in the "Leadership" department are shown in the large cards. */
+  dept: string;
+  bio: string;
+  photo?: string;
+  order: number;
+  createdAt: string;
+};
+
+export type Project = {
+  id: string;
+  title: string;
+  place: string;
+  year: string;
+  tag: string;
+  text: string;
+  image?: string;
+  order: number;
+  createdAt: string;
+};
+
+type Collections = {
+  news: News;
+  videos: Video;
+  applications: Application;
+  sms: SmsLog;
+  messages: Message;
+  team: TeamMember;
+  projects: Project;
+};
 
 async function readValue<T>(key: string, fallback: T): Promise<T> {
   if (redis) return (await redis.get<T>(`susubox:${key}`)) ?? fallback;
@@ -122,20 +155,54 @@ function serialized<T>(key: string, fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-// The sample news stories are shown until the first change is saved to Redis.
-const seeds: Partial<{ [K in keyof Collections]: Collections[K][] }> = { news: seedNews as News[] };
+// Starting content, used until the first change to a collection is saved.
+const SEED_DATE = "2024-01-01T00:00:00.000Z";
+const seeds: { [K in keyof Collections]?: () => Collections[K][] | Promise<Collections[K][]> } = {
+  news: () => seedNews as News[],
+  team: async () => {
+    const photos = await getTeamPhotos(); // photos uploaded before the team was editable
+    return seedTeam.map(({ slug, ...m }, order) => ({ id: slug, ...m, photo: photos[slug], order, createdAt: SEED_DATE }));
+  },
+  projects: () =>
+    seedProjects.map((p, order) => ({ id: p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"), ...p, order, createdAt: SEED_DATE })),
+};
 
-const read = <K extends keyof Collections>(name: K) => readValue<Collections[K][]>(name, seeds[name] ?? []);
+async function read<K extends keyof Collections>(name: K): Promise<Collections[K][]> {
+  return (await readValue<Collections[K][] | null>(name, null)) ?? (await seeds[name]?.()) ?? [];
+}
 const write = <K extends keyof Collections>(name: K, rows: Collections[K][]) => writeValue(name, rows);
 
 const newestFirst = <T extends { createdAt: string }>(rows: T[]) =>
   [...rows].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
+/** Team and projects are shown in the order set in the admin; everything else newest first. */
+const sorted = <T extends { createdAt: string }>(rows: T[]) =>
+  rows.length > 0 && typeof (rows[0] as { order?: unknown }).order === "number"
+    ? [...rows].sort((a, b) => (a as unknown as { order: number }).order - (b as unknown as { order: number }).order)
+    : newestFirst(rows);
+
 export const newId = () => crypto.randomUUID();
 
 export const db = {
   async list<K extends keyof Collections>(name: K) {
-    return newestFirst(await read(name));
+    return sorted(await read(name));
+  },
+  /** Moves a team member or project one place up (-1) or down (+1). */
+  move(name: "team" | "projects", id: string, direction: -1 | 1) {
+    return serialized(name, async () => {
+      const rows = sorted(await read(name)) as { id: string; order: number }[];
+      const i = rows.findIndex((r) => r.id === id);
+      const j = i + direction;
+      if (i < 0 || j < 0 || j >= rows.length) return;
+      [rows[i], rows[j]] = [rows[j], rows[i]];
+      rows.forEach((r, order) => (r.order = order));
+      await write(name, rows as Collections[typeof name][]);
+    });
+  },
+  /** The `order` value that puts a new row at the end. */
+  async nextOrder(name: "team" | "projects") {
+    const rows = await read(name);
+    return rows.reduce((max, r) => Math.max(max, r.order + 1), 0);
   },
   async get<K extends keyof Collections>(name: K, id: string) {
     return (await read(name)).find((row) => row.id === id);
@@ -179,15 +246,5 @@ export const db = {
   },
 };
 
-/* Team photos: a map of team member slug → photo URL. */
-
-export const getTeamPhotos = () => readValue<Record<string, string>>("team-photos", {});
-
-export function setTeamPhoto(slug: string, url: string | undefined) {
-  return serialized("team-photos", async () => {
-    const photos = await getTeamPhotos();
-    if (url) photos[slug] = url;
-    else delete photos[slug];
-    await writeValue("team-photos", photos);
-  });
-}
+/* Team photos uploaded before team members could be edited (slug → URL); read once when seeding the team. */
+const getTeamPhotos = () => readValue<Record<string, string>>("team-photos", {});
