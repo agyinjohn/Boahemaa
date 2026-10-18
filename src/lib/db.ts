@@ -187,7 +187,7 @@ const seeds: { [K in keyof Collections]?: () => Collections[K][] | Promise<Colle
   news: () => seedNews as News[],
   team: async () => {
     const photos = await getTeamPhotos(); // photos uploaded before the team was editable
-    return seedTeam.map(({ slug, ...m }, order) => ({ id: slug, ...m, photo: photos[slug], order, createdAt: SEED_DATE }));
+    return seedTeam.map(({ slug, ...m }, order) => ({ id: slug, ...m, photo: photos[slug] ?? m.photo, order, createdAt: SEED_DATE }));
   },
   projects: () =>
     seedProjects.map((p, order) => ({ id: p.title.toLowerCase().replace(/[^a-z0-9]+/g, "-"), ...p, order, createdAt: SEED_DATE })),
