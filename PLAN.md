@@ -1,4 +1,6 @@
-# Insurance Company Website: Project Plan
+# SUSU BOX: Website & Application Portal Plan
+
+**Client:** SUSU BOX (insurance company)
 
 ## 1. What the client asked for
 
@@ -6,9 +8,19 @@
 
 In practice that means three things:
 
-1. **A public website** that presents the company and builds trust (who they are, their history, their team, their products and projects).
+1. **A public website** that presents SUSU BOX and builds trust (who they are, their history, their team, their products and projects).
 2. **An application portal** where customers apply for insurance (and later track applications or file claims).
 3. **An admin area (CMS)** where staff publish news, videos, team profiles and projects themselves, without a developer.
+
+### About the name
+"Susu" is the traditional Ghanaian rotating savings and contribution scheme, usually collected daily or weekly by a field agent. If SUSU BOX's insurance follows that model (small, frequent premiums from traders, artisans and informal workers), the site should reflect it:
+- Messaging: simple, warm, "insurance for everyone"; avoid heavy jargon
+- Premiums shown as **daily / weekly** amounts, not just annual
+- **Mobile money** as the main payment method; USSD/WhatsApp as easy entry points
+- An **Agents** section: find a SUSU BOX agent near you, and agent recruitment
+- Mobile-first design; many customers will use low-cost Android phones on slow data
+
+*(Confirm this with the client; see question 11 in section 8.)*
 
 ---
 
@@ -31,6 +43,7 @@ Home
 │   └── Photo Gallery
 ├── Apply Online  (Application Portal)
 ├── Claims (how to file a claim, claim form)
+├── Agents (find an agent near you · become an agent)
 ├── Careers (job openings + CV upload)
 ├── FAQs
 ├── Contact Us (branches, map, phone, WhatsApp, form)
@@ -132,6 +145,7 @@ Home
 8. Languages needed (English only, or local languages too)?
 9. Any website they like the look of (competitors or others)?
 10. What's the budget range and the target launch date?
+11. Does SUSU BOX run on the susu model (daily/weekly contributions, field agents)? Do agents need their own login to register customers and record collections?
 
 ---
 
