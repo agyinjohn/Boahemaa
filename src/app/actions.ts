@@ -2,10 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db, deleteUpload, newId, saveUpload, type ApplicationStatus } from "@/lib/db";
+import { db, deleteUpload, getTeamPhotos, newId, saveUpload, setTeamPhoto, type ApplicationStatus } from "@/lib/db";
 import { checkPassword, endSession, requireAdmin, startSession } from "@/lib/auth";
 import { parseYouTubeId } from "@/lib/format";
-import { products } from "@/lib/site";
+import { products, team } from "@/lib/site";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
 
@@ -153,4 +153,33 @@ export async function deleteApplication(fd: FormData) {
   const removed = await db.remove("applications", text(fd, "id"));
   await deleteUpload(removed?.document);
   revalidatePath("/admin", "layout");
+}
+
+/* ─────────── Admin: team photos ─────────── */
+
+export async function uploadTeamPhoto(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const slug = text(fd, "slug");
+  if (!team.some((m) => m.slug === slug)) return { error: "Unknown team member." };
+  const file = fd.get("photo");
+  if (file instanceof File && file.size > 0 && !file.type.startsWith("image/")) return { error: "Please choose an image." };
+  let url: string | undefined;
+  try {
+    url = await saveUpload(file);
+  } catch {
+    return { error: "Photo must be JPG, PNG, WEBP or GIF." };
+  }
+  if (!url) return { error: "Please choose a photo." };
+  await deleteUpload((await getTeamPhotos())[slug]);
+  await setTeamPhoto(slug, url);
+  revalidatePath("/", "layout");
+  return { ok: true };
+}
+
+export async function removeTeamPhoto(fd: FormData) {
+  await requireAdmin();
+  const slug = text(fd, "slug");
+  await deleteUpload((await getTeamPhotos())[slug]);
+  await setTeamPhoto(slug, undefined);
+  revalidatePath("/", "layout");
 }

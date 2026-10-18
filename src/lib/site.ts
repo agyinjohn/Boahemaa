@@ -71,14 +71,14 @@ export const values = [
 ];
 
 export const team = [
-  { name: "Akosua Mensah", role: "Chief Executive Officer", dept: "Leadership", bio: "Founded SUSU BOX after 15 years in microfinance." },
-  { name: "Kwame Asante", role: "Chief Operations Officer", dept: "Leadership", bio: "Leads our branches, agents and customer care." },
-  { name: "Efua Owusu", role: "Head of Underwriting", dept: "Leadership", bio: "Designs plans that fit real lives and real budgets." },
-  { name: "Yaw Darko", role: "Head of Claims", dept: "Operations", bio: "Keeps our promise of paying claims within 7 days." },
-  { name: "Abena Kyei", role: "Customer Experience Lead", dept: "Operations", bio: "Makes sure every customer is heard and helped." },
-  { name: "Kofi Boateng", role: "Lead Engineer", dept: "Technology", bio: "Builds the tools behind our mobile money payments." },
-  { name: "Ama Serwaa", role: "Marketing Manager", dept: "Marketing", bio: "Tells the SUSU BOX story across Ghana." },
-  { name: "Nana Yeboah", role: "Field Agent Coordinator", dept: "Operations", bio: "Supports our 600+ agents in markets nationwide." },
+  { slug: "akosua-mensah", name: "Akosua Mensah", role: "Chief Executive Officer", dept: "Leadership", bio: "Founded SUSU BOX after 15 years in microfinance." },
+  { slug: "kwame-asante", name: "Kwame Asante", role: "Chief Operations Officer", dept: "Leadership", bio: "Leads our branches, agents and customer care." },
+  { slug: "efua-owusu", name: "Efua Owusu", role: "Head of Underwriting", dept: "Leadership", bio: "Designs plans that fit real lives and real budgets." },
+  { slug: "yaw-darko", name: "Yaw Darko", role: "Head of Claims", dept: "Operations", bio: "Keeps our promise of paying claims within 7 days." },
+  { slug: "abena-kyei", name: "Abena Kyei", role: "Customer Experience Lead", dept: "Operations", bio: "Makes sure every customer is heard and helped." },
+  { slug: "kofi-boateng", name: "Kofi Boateng", role: "Lead Engineer", dept: "Technology", bio: "Builds the tools behind our mobile money payments." },
+  { slug: "ama-serwaa", name: "Ama Serwaa", role: "Marketing Manager", dept: "Marketing", bio: "Tells the SUSU BOX story across Ghana." },
+  { slug: "nana-yeboah", name: "Nana Yeboah", role: "Field Agent Coordinator", dept: "Operations", bio: "Supports our 600+ agents in markets nationwide." },
 ];
 
 export const projects = [

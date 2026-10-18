@@ -15,7 +15,7 @@ A school-project website for **SUSU BOX**, a fictional Ghanaian insurance compan
 | **Videos** (`/videos`) | YouTube or uploaded videos |
 | **Contact** (`/contact`) | Phone, WhatsApp, email, branches, map |
 | **Apply** (`/apply`) | Application form in 3 steps with ID upload and a reference number |
-| **Admin** (`/admin`) | Password-protected dashboard to **publish news, upload videos and review applications** |
+| **Admin** (`/admin`) | Password-protected dashboard to **publish news, upload videos, upload team photos and review applications** |
 
 ## Run it
 
@@ -41,6 +41,7 @@ To keep things simple there is no database server. Everything is saved as JSON f
 - `data/news.json`: news stories (comes with 4 sample stories)
 - `data/videos.json`: videos
 - `data/applications.json`: applications submitted on the website (created automatically)
+- `data/team-photos.json`: which photo belongs to which team member (created when you upload one)
 - `data/uploads/`: uploaded images and videos. Customer ID documents go in `data/uploads/private/` and only logged-in admins can open them.
 
 > Note: because data is saved to files, host it somewhere with a persistent disk (e.g. Render, Railway or a VPS). Vercel's serverless hosting does not keep files written at runtime.
@@ -49,7 +50,7 @@ To keep things simple there is no database server. Everything is saved as JSON f
 
 - Company info, products, team, projects, timeline and stats: `src/lib/site.ts`
 - Colours and fonts: `src/app/globals.css`
-- News and videos: use the admin dashboard
+- News, videos and team photos: use the admin dashboard (**Admin → Team photos** to upload a photo for each person)
 
 ## Project structure
 

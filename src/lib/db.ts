@@ -93,6 +93,25 @@ export const db = {
   },
 };
 
+/* Team photos: a map of team member slug → uploaded photo URL. */
+const TEAM_PHOTOS = path.join(DATA_DIR, "team-photos.json");
+
+export async function getTeamPhotos(): Promise<Record<string, string>> {
+  try {
+    return JSON.parse(await fs.readFile(TEAM_PHOTOS, "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+export async function setTeamPhoto(slug: string, url: string | undefined) {
+  const photos = await getTeamPhotos();
+  if (url) photos[slug] = url;
+  else delete photos[slug];
+  await fs.mkdir(DATA_DIR, { recursive: true });
+  await fs.writeFile(TEAM_PHOTOS, JSON.stringify(photos, null, 2));
+}
+
 const ALLOWED = /\.(jpe?g|png|webp|gif|pdf|mp4|webm|mov)$/i;
 
 /**

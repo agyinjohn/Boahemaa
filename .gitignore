@@ -6,5 +6,6 @@ next-env.d.ts
 .env*.local
 # Runtime data created by the site (applications + uploaded files)
 data/applications.json
+data/team-photos.json
 data/uploads/*
 !data/uploads/.gitkeep
