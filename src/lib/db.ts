@@ -87,6 +87,31 @@ export type Message = {
   createdAt: string;
 };
 
+import { CLAIM_STATUSES, type ClaimStatus } from "@/lib/claimStatus";
+export { CLAIM_STATUSES, type ClaimStatus };
+
+export type Claim = {
+  id: string;
+  reference: string;
+  /** The customer's phone in 0XXXXXXXXX form: this is what links a claim to an account. */
+  phone: string;
+  customerName: string;
+  applicationId: string;
+  policyReference: string;
+  product: string;
+  plan: string;
+  type: string;
+  incidentDate: string;
+  description: string;
+  amountClaimed?: number;
+  approvedAmount?: number;
+  /** Private document references (see lib/storage.ts). */
+  documents: string[];
+  status: ClaimStatus;
+  history: { status: ClaimStatus; note?: string; at: string }[];
+  createdAt: string;
+};
+
 export type TeamMember = {
   id: string;
   name: string;
@@ -119,6 +144,7 @@ type Collections = {
   messages: Message;
   team: TeamMember;
   projects: Project;
+  claims: Claim;
 };
 
 async function readValue<T>(key: string, fallback: T): Promise<T> {
@@ -248,3 +274,28 @@ export const db = {
 
 /* Team photos uploaded before team members could be edited (slug → URL); read once when seeding the team. */
 const getTeamPhotos = () => readValue<Record<string, string>>("team-photos", {});
+
+/*
+ * Short-lived values with an expiry (login codes): Redis on Vercel, memory locally.
+ */
+const memoryKv = new Map<string, { value: unknown; expires: number }>();
+
+export const kv = {
+  async get<T>(key: string): Promise<T | null> {
+    if (redis) return redis.get<T>(`susubox:kv:${key}`);
+    const entry = memoryKv.get(key);
+    if (!entry || entry.expires < Date.now()) {
+      memoryKv.delete(key);
+      return null;
+    }
+    return entry.value as T;
+  },
+  async set(key: string, value: unknown, ttlSeconds: number) {
+    if (redis) await redis.set(`susubox:kv:${key}`, value, { ex: ttlSeconds });
+    else memoryKv.set(key, { value, expires: Date.now() + ttlSeconds * 1000 });
+  },
+  async del(key: string) {
+    if (redis) await redis.del(`susubox:kv:${key}`);
+    else memoryKv.delete(key);
+  },
+};

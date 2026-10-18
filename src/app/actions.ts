@@ -2,14 +2,15 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { db, newId, type ApplicationStatus } from "@/lib/db";
+import { CLAIM_STATUSES, db, kv, newId, type ApplicationStatus, type ClaimStatus } from "@/lib/db";
 import { deleteUpload, signUpload, storeUpload, type UploadKind } from "@/lib/storage";
 import { checkPassword, endSession, isAdmin, requireAdmin, startSession } from "@/lib/auth";
 import { parseYouTubeId } from "@/lib/format";
-import { CONTACT_TOPICS, planPrice } from "@/lib/site";
+import { CONTACT_TOPICS, claimTypesFor, planPrice } from "@/lib/site";
 import { initializePayment, paystackEnabled } from "@/lib/paystack";
-import { normalizePhone, sendSms } from "@/lib/sms";
-import { smsAdminNewApplication, smsApplicationReceived, smsStatusChanged } from "@/lib/notify";
+import { normalizePhone, sendSms, smsEnabled } from "@/lib/sms";
+import { smsAdminNewApplication, smsAdminNewClaim, smsApplicationReceived, smsClaimReceived, smsClaimStatus, smsStatusChanged } from "@/lib/notify";
+import { customerData, demoLoginAllowed, endCustomerSession, isActivePolicy, requireCustomer, startCustomerSession } from "@/lib/customer";
 import { siteUrl } from "@/lib/url";
 import { checkSpam, clientIp, rateLimit, verifyTurnstile } from "@/lib/spam";
 
@@ -134,6 +135,119 @@ export async function sendMessage(_: FormState, fd: FormData): Promise<FormState
   if (staff) await sendSms(staff, `New ${msg.topic.toLowerCase()} message from ${msg.name} (${msg.phone || msg.email}). See the admin dashboard.`);
   revalidatePath("/admin", "layout");
   return { ok: true };
+}
+
+/* ─────────── Customer accounts: sign in with an SMS code ─────────── */
+
+export type LoginState = { step?: "code"; phone?: string; demoCode?: string; error?: string };
+
+const CODE_TTL = 10 * 60;
+const hashCode = (phone: string, code: string) =>
+  crypto.subtle
+    .digest("SHA-256", new TextEncoder().encode(`${process.env.SESSION_SECRET || "susubox-dev-secret"}:${phone}:${code}`))
+    .then((buf) => Buffer.from(buf).toString("hex"));
+
+export async function requestLoginCode(_: LoginState, fd: FormData): Promise<LoginState> {
+  const phone = normalizePhone(text(fd, "phone"));
+  if (!/^0\d{9}$/.test(phone)) return { error: "Please enter a valid Ghana phone number, e.g. 024 123 4567." };
+
+  const spam = await checkSpam(fd, "login-code", 10, 3600);
+  if (!spam.ok) return spam.silent ? { step: "code", phone } : { error: spam.error };
+  if (!(await rateLimit(`login-code-phone:${phone}`, 3, 15 * 60))) {
+    return { error: "Too many codes sent to this number. Please wait 15 minutes." };
+  }
+
+  const code = String(crypto.getRandomValues(new Uint32Array(1))[0] % 1_000_000).padStart(6, "0");
+  await kv.set(`login:${phone}`, { hash: await hashCode(phone, code), attempts: 0 }, CODE_TTL);
+  await sendSms(phone, `Your SUSU BOX sign-in code is ${code}. It expires in 10 minutes. Never share this code.`);
+  // Without SMS (local demo, or ALLOW_DEMO_LOGIN on a live site) the code is shown on screen instead.
+  return { step: "code", phone, demoCode: !smsEnabled && demoLoginAllowed() ? code : undefined };
+}
+
+export async function verifyLoginCode(_: LoginState, fd: FormData): Promise<LoginState> {
+  const phone = normalizePhone(text(fd, "phone"));
+  const code = text(fd, "code").replace(/\D/g, "");
+  const back = { step: "code" as const, phone };
+  const saved = await kv.get<{ hash: string; attempts: number }>(`login:${phone}`);
+  if (!saved) return { ...back, error: "This code has expired. Please request a new one." };
+  if (saved.attempts >= 5) {
+    await kv.del(`login:${phone}`);
+    return { ...back, error: "Too many wrong codes. Please request a new one." };
+  }
+  if ((await hashCode(phone, code)) !== saved.hash) {
+    await kv.set(`login:${phone}`, { ...saved, attempts: saved.attempts + 1 }, CODE_TTL);
+    return { ...back, error: "That code isn't right. Please check the SMS and try again." };
+  }
+  await kv.del(`login:${phone}`);
+  await startCustomerSession(phone);
+  redirect("/account");
+}
+
+export async function customerLogout() {
+  await endCustomerSession();
+  redirect("/account/login");
+}
+
+/* ─────────── Customer accounts: claims ─────────── */
+
+const CLAIM_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const newClaimReference = () =>
+  `CL-${new Date().getFullYear()}-${Array.from(crypto.getRandomValues(new Uint8Array(6)), (b) => CLAIM_CHARS[b % CLAIM_CHARS.length]).join("")}`;
+
+export async function submitClaim(_: FormState, fd: FormData): Promise<FormState> {
+  const phone = await requireCustomer();
+  const { applications, name } = await customerData(phone);
+  const policy = applications.find((a) => a.id === text(fd, "applicationId"));
+  if (!policy || !isActivePolicy(policy)) return { error: "Please choose one of your active policies." };
+
+  const type = text(fd, "type");
+  if (!claimTypesFor(policy.product).includes(type)) return { error: "Please choose what happened." };
+  const incidentDate = text(fd, "incidentDate");
+  const day = new Date(incidentDate);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(incidentDate) || isNaN(day.getTime()) || day.getTime() > Date.now()) {
+    return { error: "Please enter the date it happened (not in the future)." };
+  }
+  const description = text(fd, "description").slice(0, 2000);
+  if (description.length < 20) return { error: "Please describe what happened in a few sentences." };
+  const amountText = text(fd, "amountClaimed").replace(/[^\d.]/g, "");
+  const amountClaimed = amountText ? Math.round(Number(amountText) * 100) / 100 : undefined;
+  if (amountClaimed !== undefined && !(amountClaimed > 0)) return { error: "Please enter a valid amount, or leave it empty." };
+  if (!(await rateLimit(`claim:${phone}`, 5, 24 * 3600))) return { error: "You've submitted several claims today. Please call us to add another." };
+
+  const documents: string[] = [];
+  try {
+    for (const file of fd.getAll("documents").slice(0, 5)) {
+      const stored = await storeUpload(file, "document");
+      if (stored) documents.push(stored);
+    }
+  } catch {
+    await Promise.all(documents.map((d) => deleteUpload(d)));
+    return { error: "Documents must be photos (JPG, PNG, WEBP) or PDFs." };
+  }
+
+  const now = new Date().toISOString();
+  const claim = await db.insert("claims", {
+    id: newId(),
+    reference: newClaimReference(),
+    phone,
+    customerName: name ?? policy.fullName,
+    applicationId: policy.id,
+    policyReference: policy.reference,
+    product: policy.product,
+    plan: policy.plan,
+    type,
+    incidentDate,
+    description,
+    amountClaimed,
+    documents,
+    status: "Submitted",
+    history: [{ status: "Submitted", at: now }],
+    createdAt: now,
+  });
+  await Promise.all([smsClaimReceived(claim, `${await siteUrl()}/account/claims/${claim.id}`), smsAdminNewClaim(claim)]);
+  revalidatePath("/admin", "layout");
+  revalidatePath("/account", "layout");
+  redirect(`/account/claims/${claim.id}?new=1`);
 }
 
 /* ─────────── Admin: auth ─────────── */
@@ -417,4 +531,33 @@ export async function deleteMessage(fd: FormData) {
   await requireAdmin();
   await db.remove("messages", text(fd, "id"));
   revalidatePath("/admin", "layout");
+}
+
+/* ─────────── Admin: claims ─────────── */
+
+export async function updateClaim(_: FormState, fd: FormData): Promise<FormState> {
+  await requireAdmin();
+  const claim = await db.get("claims", text(fd, "id"));
+  if (!claim) return { error: "This claim no longer exists." };
+  const status = text(fd, "status") as ClaimStatus;
+  if (!CLAIM_STATUSES.includes(status)) return { error: "Choose a status." };
+  const note = text(fd, "note").slice(0, 500) || undefined;
+  const approvedText = text(fd, "approvedAmount").replace(/[^\d.]/g, "");
+  const approvedAmount = approvedText ? Math.round(Number(approvedText) * 100) / 100 : claim.approvedAmount;
+  if ((status === "Approved" || status === "Paid") && !(approvedAmount && approvedAmount > 0)) {
+    return { error: "Enter the approved amount before approving or paying a claim." };
+  }
+  if (status === claim.status && !note && approvedAmount === claim.approvedAmount) return { error: "Nothing has changed." };
+
+  const updated = {
+    ...claim,
+    status,
+    approvedAmount,
+    history: [...claim.history, { status, note, at: new Date().toISOString() }],
+  };
+  await db.update("claims", claim.id, { status, approvedAmount, history: updated.history });
+  if (status !== claim.status || note) await smsClaimStatus(updated, note);
+  revalidatePath("/admin", "layout");
+  revalidatePath("/account", "layout");
+  return { ok: true };
 }

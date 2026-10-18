@@ -1,4 +1,4 @@
-import type { Application } from "@/lib/db";
+import type { Application, Claim, ClaimStatus } from "@/lib/db";
 import { sendSms } from "@/lib/sms";
 import { cedis } from "@/lib/site";
 
@@ -37,4 +37,33 @@ export function smsAdminNewApplication(a: Application) {
   const phone = process.env.ADMIN_SMS_PHONE;
   if (!phone) return;
   return sendSms(phone, `New application ${a.reference}: ${a.fullName}, ${a.product} (${a.plan}), ${a.phone}.`);
+}
+
+/* Claims */
+
+export function smsClaimReceived(c: Claim, trackUrl: string) {
+  return sendSms(c.phone, `SUSU BOX: we received your ${c.type.toLowerCase()} claim ${c.reference}. We'll review it within 7 days. Track it here: ${trackUrl}`);
+}
+
+const claimStatusText: Partial<Record<ClaimStatus, string>> = {
+  "Under Review": "is now being reviewed.",
+  "More Info Needed": "needs more information from you.",
+  Approved: "has been APPROVED.",
+  Paid: "has been PAID. Thank you for trusting SUSU BOX.",
+  Rejected: "could not be approved.",
+};
+
+export function smsClaimStatus(c: Claim, note?: string) {
+  const text = claimStatusText[c.status];
+  if (!text) return;
+  const amount = c.approvedAmount && (c.status === "Approved" || c.status === "Paid") ? ` Amount: ${cedis(c.approvedAmount)}.` : "";
+  const extra = note ? ` Note: ${note.length > 120 ? note.slice(0, 117) + "…" : note}` : "";
+  return sendSms(c.phone, `SUSU BOX claim ${c.reference} ${text}${amount}${extra}`);
+}
+
+export function smsAdminNewClaim(c: Claim) {
+  const phone = process.env.ADMIN_SMS_PHONE;
+  if (!phone) return;
+  const amount = c.amountClaimed ? `, ${cedis(c.amountClaimed)}` : "";
+  return sendSms(phone, `New claim ${c.reference}: ${c.customerName}, ${c.product} (${c.type}${amount}).`);
 }

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowUpRight, Banknote, ClipboardList, Clock, Newspaper, CirclePlay } from "lucide-react";
+import { ArrowUpRight, Banknote, ClipboardList, Clock, HandCoins, Newspaper, CirclePlay } from "lucide-react";
 import { cedis } from "@/lib/site";
 import { db } from "@/lib/db";
 import { formatDate } from "@/lib/format";
@@ -8,7 +8,8 @@ import { StatusBadge } from "@/components/admin/StatusBadge";
 import { Integrations } from "@/components/admin/Integrations";
 
 export default async function AdminHome() {
-  const [applications, news, videos] = await Promise.all([db.list("applications"), db.list("news"), db.list("videos")]);
+  const [applications, claims] = await Promise.all([db.list("applications"), db.list("claims")]);
+  const openClaims = claims.filter((c) => !["Paid", "Rejected"].includes(c.status)).length;
   const pending = applications.filter((a) => a.status === "Pending").length;
   const collected = applications.reduce((sum, a) => sum + (a.payment?.amount ?? 0), 0);
   const paidCount = applications.filter((a) => a.payment).length;
@@ -17,7 +18,7 @@ export default async function AdminHome() {
     { label: "Applications", value: applications.length, icon: ClipboardList, href: "/admin/applications", tone: "bg-forest-900 text-cream" },
     { label: "Awaiting review", value: pending, icon: Clock, href: "/admin/applications?status=Pending", tone: "bg-gold-500 text-forest-950" },
     { label: `Premiums collected (${paidCount} paid)`, value: cedis(collected), icon: Banknote, href: "/admin/applications", tone: "bg-white" },
-    { label: "News & videos", value: news.length + videos.length, icon: Newspaper, href: "/admin/news", tone: "bg-white" },
+    { label: "Open claims", value: openClaims, icon: HandCoins, href: "/admin/claims", tone: "bg-white" },
   ];
 
   return (

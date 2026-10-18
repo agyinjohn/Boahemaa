@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Menu, X, ArrowUpRight } from "lucide-react";
+import { Menu, X, ArrowUpRight, UserRound } from "lucide-react";
 import { Logo } from "./Logo";
 
 const links = [
@@ -60,6 +60,14 @@ export function Navbar() {
           ))}
         </ul>
         <div className="flex items-center gap-2">
+          <Link
+            href="/account"
+            className={`hidden items-center gap-2 rounded-full px-3.5 py-2 text-sm font-medium transition-colors sm:inline-flex ${
+              pathname.startsWith("/account") ? "text-forest-950" : "text-muted hover:text-forest-900"
+            }`}
+          >
+            <UserRound className="h-4 w-4" /> My account
+          </Link>
           <Link href="/apply" className="btn btn-primary hidden sm:inline-flex">
             Apply now <ArrowUpRight className="h-4 w-4" />
           </Link>
@@ -90,7 +98,10 @@ export function Navbar() {
                 </Link>
               </li>
             ))}
-            <li className="pt-5">
+            <li className="grid gap-3 pt-5">
+              <Link href="/account" className="btn btn-ghost w-full">
+                <UserRound className="h-4 w-4" /> My account
+              </Link>
               <Link href="/apply" className="btn btn-gold w-full">
                 Apply for cover
               </Link>

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CirclePlay, ClipboardList, ExternalLink, FolderKanban, Inbox, LayoutDashboard, LogOut, MessageSquare, Newspaper, Users } from "lucide-react";
+import { CirclePlay, ClipboardList, HandCoins, ExternalLink, FolderKanban, Inbox, LayoutDashboard, LogOut, MessageSquare, Newspaper, Users } from "lucide-react";
 import { logout } from "@/app/actions";
 import { LogoMark } from "@/components/Logo";
 
 const links = [
   { href: "/admin", label: "Overview", icon: LayoutDashboard },
   { href: "/admin/applications", label: "Applications", icon: ClipboardList },
+  { href: "/admin/claims", label: "Claims", icon: HandCoins },
   { href: "/admin/messages", label: "Messages", icon: Inbox },
   { href: "/admin/news", label: "News stories", icon: Newspaper },
   { href: "/admin/videos", label: "Videos", icon: CirclePlay },

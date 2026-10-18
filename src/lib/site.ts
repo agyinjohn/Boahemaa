@@ -20,6 +20,7 @@ export const products = [
     from: "GH₵ 2 / day",
     plans: [{ name: "Basic", monthly: 60 }, { name: "Family", monthly: 120 }, { name: "Premium", monthly: 200 }],
     benefits: ["Outpatient & inpatient care", "Maternity support", "Nationwide hospital network"],
+    claimTypes: ["Hospital bill", "Medication", "Maternity", "Other"],
   },
   {
     slug: "life",
@@ -29,6 +30,7 @@ export const products = [
     from: "GH₵ 1 / day",
     plans: [{ name: "Individual", monthly: 30 }, { name: "Family", monthly: 75 }, { name: "Education Saver", monthly: 150 }],
     benefits: ["Lump-sum payout to family", "Funeral cover within 48 hours", "Optional savings plan"],
+    claimTypes: ["Death of insured", "Funeral support", "Other"],
   },
   {
     slug: "motor",
@@ -38,6 +40,7 @@ export const products = [
     from: "GH₵ 5 / day",
     plans: [{ name: "Third Party", monthly: 150 }, { name: "Third Party, Fire & Theft", monthly: 220 }, { name: "Comprehensive", monthly: 400 }],
     benefits: ["24/7 roadside help", "Fast claims in 7 days", "Commercial vehicle options"],
+    claimTypes: ["Accident damage", "Theft", "Fire", "Third-party injury", "Other"],
   },
   {
     slug: "property",
@@ -47,6 +50,7 @@ export const products = [
     from: "GH₵ 3 / day",
     plans: [{ name: "Home", monthly: 90 }, { name: "Shop & Stock", monthly: 130 }, { name: "Home + Shop", monthly: 200 }],
     benefits: ["Fire, flood & burglary", "Stock replacement", "Market trader packages"],
+    claimTypes: ["Fire", "Flood", "Burglary or theft", "Other"],
   },
 ] as const;
 
@@ -104,3 +108,7 @@ export function planPrice(productName: string, planName: string): number | undef
 }
 
 export const cedis = (amount: number) => `GH₵ ${amount.toLocaleString("en-GH")}`;
+
+/** The kinds of claim a customer can make on a product. */
+export const claimTypesFor = (productName: string): readonly string[] =>
+  products.find((p) => p.name === productName)?.claimTypes ?? ["Other"];

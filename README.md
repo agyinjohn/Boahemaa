@@ -16,7 +16,8 @@ A school-project website for **SUSU BOX**, a fictional Ghanaian insurance compan
 | **Contact** (`/contact`) | Contact form (messages go to Admin → Messages), phone, WhatsApp, email, branches, map |
 | **Apply** (`/apply`) | Application form in 3 steps with ID upload, a reference number and **online payment** |
 | **Pay** (`/pay/<reference>`) | Pay the first premium by **Mobile Money or card through Paystack** (link is also sent by SMS) |
-| **SMS** | **mNotify** texts customers when they apply, pay, and when their application is approved/rejected |
+| **My account** (`/account`) | Customers sign in with their **phone number + SMS code**, see their policies and payments, **make claims** with photos/documents and track them |
+| **SMS** | **mNotify** texts customers when they apply, pay, sign in, file a claim, and when an application or claim changes status |
 | **Admin** (`/admin`) | Password-protected dashboard to **publish and edit news, upload videos, manage the team and projects, review applications and payments, read contact messages, and see every SMS sent** |
 
 ## Run it
@@ -74,6 +75,18 @@ In cloud mode, files are uploaded **straight from the browser to Cloudinary**, s
 | **mNotify** | Create an account at [mnotify.com](https://www.mnotify.com), buy some SMS credit, and **register a sender ID** (e.g. `SUSUBOX`; approval can take a day or two). Put the API key in `MNOTIFY_API_KEY` and the sender ID in `MNOTIFY_SENDER_ID`. Optionally set `ADMIN_SMS_PHONE` to get a text for every new application. |
 
 Without these keys the site still works: the Pay button is hidden, and SMS messages are recorded in the SMS log as `simulated`, which is handy for a demo.
+
+## Customer accounts and claims
+
+**Signing in:** customers go to **My account**, enter the phone number they applied with, and get a 6-digit code by SMS. There are no passwords. Codes expire after 10 minutes and allow 5 wrong tries; sending codes is limited to 3 per number per 15 minutes (plus the usual spam protection). The account shows every application made with that phone number.
+
+**Demo mode:** if mNotify isn't set up, the code is shown on screen instead of texted. This happens automatically with `npm run dev`. On a live site it only happens when `ALLOW_DEMO_LOGIN=true`, because it lets anyone sign in as any number, so only turn that on for a classroom demo.
+
+**Policies:** an application becomes an **active policy** once an admin approves it *and* the first premium is paid. Customers see each one as Active, Awaiting payment (with a Pay button), Being processed, or Not approved.
+
+**Claims:** customers with an active policy can **make a claim**: pick the policy, what happened (options depend on the product), the date, a description, an optional amount, and up to 5 photos/PDFs (stored privately). They can follow it through **Submitted → Under Review → Approved → Paid** (or More Info Needed / Rejected) and read notes from staff.
+
+**Admin → Claims:** filter by status, read the details, open the documents, call or WhatsApp the customer, and update the status with a note and the approved amount. Every change is texted to the customer and kept in the claim's history. `ADMIN_SMS_PHONE` also gets a text for each new claim.
 
 ## Spam protection
 

@@ -6,10 +6,11 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   await requireAdmin();
-  const [applications, messages] = await Promise.all([db.list("applications"), db.list("messages")]);
+  const [applications, messages, claims] = await Promise.all([db.list("applications"), db.list("messages"), db.list("claims")]);
   const badges = {
     "/admin/applications": applications.filter((a) => a.status === "Pending").length,
     "/admin/messages": messages.filter((m) => !m.read).length,
+    "/admin/claims": claims.filter((c) => c.status === "Submitted").length,
   };
   return (
     <div className="min-h-screen bg-sand/60">
