@@ -105,7 +105,7 @@ The limits are set in `src/app/actions.ts` (`checkSpam(fd, "apply")`, `rateLimit
 
 1. **Cloudinary:** create a free account at [cloudinary.com](https://cloudinary.com). On the dashboard, copy your *Cloud name*, *API key* and *API secret*.
 2. **Vercel:** import this GitHub repo at [vercel.com/new](https://vercel.com/new).
-3. **Redis:** in the Vercel project, open **Storage → Create → Upstash for Redis** (free plan) and connect it to the project. Vercel adds `KV_REST_API_URL` and `KV_REST_API_TOKEN` for you.
+3. **Redis (required):** in the Vercel project, open **Storage**, create a free **Upstash for Redis** database (or Vercel's **Redis**) and **connect it to the project**. Vercel adds the connection settings for you. The site understands `KV_REST_API_URL` + `KV_REST_API_TOKEN`, `UPSTASH_REDIS_REST_URL` + `UPSTASH_REDIS_REST_TOKEN` (with or without a prefix such as `STORAGE_`), and `REDIS_URL`.
 4. **Environment variables:** in **Settings → Environment Variables**, add:
    - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
    - `PAYSTACK_SECRET_KEY`, `MNOTIFY_API_KEY`, `MNOTIFY_SENDER_ID` (see the section above)
@@ -114,6 +114,10 @@ The limits are set in `src/app/actions.ts` (`checkSpam(fd, "apply")`, `rateLimit
 5. **Redeploy** (Deployments → ⋯ → Redeploy) so the new variables take effect.
 
 To try cloud mode locally, copy `.env.example` to `.env.local` and fill in the same values.
+
+**Check it worked:** sign in to `/admin`. The status cards at the top show **Database: Connected** and **File uploads: Cloudinary**. If anything is missing on Vercel, a red banner explains what to add.
+
+> **"Application error: a server-side exception has occurred" when applying** means no database was connected when the site was deployed (Vercel can't save files). Connect Redis as in step 3, then **redeploy**. The site now shows customers a polite message instead, and the Vercel logs say `[SUSU BOX setup] …` with what's missing.
 
 > If PDFs uploaded as ID documents won't open, turn on **Settings → Security → "Allow delivery of PDF and ZIP files"** in Cloudinary.
 

@@ -2,11 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { CLAIM_STATUSES, db, kv, newId, type ApplicationStatus, type ClaimStatus } from "@/lib/db";
+import { CLAIM_STATUSES, db, kv, newId, StorageNotConfiguredError, type ApplicationStatus, type ClaimStatus } from "@/lib/db";
 import { deleteUpload, signUpload, storeUpload, type UploadKind } from "@/lib/storage";
 import { checkPassword, endSession, isAdmin, requireAdmin, startSession } from "@/lib/auth";
 import { parseYouTubeId } from "@/lib/format";
-import { CONTACT_TOPICS, claimTypesFor, planPrice } from "@/lib/site";
+import { CONTACT_TOPICS, claimTypesFor, company, planPrice } from "@/lib/site";
 import { initializePayment, paystackEnabled } from "@/lib/paystack";
 import { normalizePhone, sendSms, smsEnabled } from "@/lib/sms";
 import { smsAdminNewApplication, smsAdminNewClaim, smsApplicationReceived, smsClaimReceived, smsClaimStatus, smsStatusChanged } from "@/lib/notify";
@@ -15,6 +15,16 @@ import { siteUrl } from "@/lib/url";
 import { checkSpam, clientIp, rateLimit, verifyTurnstile } from "@/lib/spam";
 
 const text = (fd: FormData, key: string) => String(fd.get(key) ?? "").trim();
+
+/**
+ * Turns "the website has no database / file storage set up" into a polite message for the visitor
+ * (and a clear entry in the server log). Any other error is passed on.
+ */
+function storageProblem(err: unknown): { error: string } {
+  if (!(err instanceof StorageNotConfiguredError)) throw err;
+  console.error(`[SUSU BOX setup] ${err.message}`);
+  return { error: `Sorry, we can't save this right now because of a problem on our side. Please try again later or call us on ${company.phone}.` };
+}
 
 /* ─────────── Uploads ─────────── */
 
@@ -65,20 +75,26 @@ export async function submitApplication(_: ApplyState, fd: FormData): Promise<Ap
   let document: string | undefined;
   try {
     document = await storeUpload(fd.get("document"), "document");
-  } catch {
+  } catch (err) {
+    if (err instanceof StorageNotConfiguredError) return storageProblem(err);
     return { error: "ID document must be an image or PDF." };
   }
 
   const reference = newReference();
-  const application = await db.insert("applications", {
-    id: newId(),
-    reference,
-    ...fields,
-    document,
-    status: "Pending",
-    amount,
-    createdAt: new Date().toISOString(),
-  });
+  let application;
+  try {
+    application = await db.insert("applications", {
+      id: newId(),
+      reference,
+      ...fields,
+      document,
+      status: "Pending",
+      amount,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (err) {
+    return storageProblem(err);
+  }
   await Promise.all([
     smsApplicationReceived(application, `${await siteUrl()}/pay/${reference}`),
     smsAdminNewApplication(application),
@@ -130,7 +146,11 @@ export async function sendMessage(_: FormState, fd: FormData): Promise<FormState
   if (!msg.phone && !msg.email) return { error: "Please give a phone number or email so we can reply." };
   if (msg.phone && normalizePhone(msg.phone).length < 10) return { error: "Please enter a valid phone number." };
 
-  await db.insert("messages", { id: newId(), ...msg, read: false, createdAt: new Date().toISOString() });
+  try {
+    await db.insert("messages", { id: newId(), ...msg, read: false, createdAt: new Date().toISOString() });
+  } catch (err) {
+    return storageProblem(err);
+  }
   const staff = process.env.ADMIN_SMS_PHONE;
   if (staff) await sendSms(staff, `New ${msg.topic.toLowerCase()} message from ${msg.name} (${msg.phone || msg.email}). See the admin dashboard.`);
   revalidatePath("/admin", "layout");
@@ -220,30 +240,36 @@ export async function submitClaim(_: FormState, fd: FormData): Promise<FormState
       const stored = await storeUpload(file, "document");
       if (stored) documents.push(stored);
     }
-  } catch {
+  } catch (err) {
     await Promise.all(documents.map((d) => deleteUpload(d)));
+    if (err instanceof StorageNotConfiguredError) return storageProblem(err);
     return { error: "Documents must be photos (JPG, PNG, WEBP) or PDFs." };
   }
 
   const now = new Date().toISOString();
-  const claim = await db.insert("claims", {
-    id: newId(),
-    reference: newClaimReference(),
-    phone,
-    customerName: name ?? policy.fullName,
-    applicationId: policy.id,
-    policyReference: policy.reference,
-    product: policy.product,
-    plan: policy.plan,
-    type,
-    incidentDate,
-    description,
-    amountClaimed,
-    documents,
-    status: "Submitted",
-    history: [{ status: "Submitted", at: now }],
-    createdAt: now,
-  });
+  let claim;
+  try {
+    claim = await db.insert("claims", {
+      id: newId(),
+      reference: newClaimReference(),
+      phone,
+      customerName: name ?? policy.fullName,
+      applicationId: policy.id,
+      policyReference: policy.reference,
+      product: policy.product,
+      plan: policy.plan,
+      type,
+      incidentDate,
+      description,
+      amountClaimed,
+      documents,
+      status: "Submitted",
+      history: [{ status: "Submitted", at: now }],
+      createdAt: now,
+    });
+  } catch (err) {
+    return storageProblem(err);
+  }
   await Promise.all([smsClaimReceived(claim, `${await siteUrl()}/account/claims/${claim.id}`), smsAdminNewClaim(claim)]);
   revalidatePath("/admin", "layout");
   revalidatePath("/account", "layout");

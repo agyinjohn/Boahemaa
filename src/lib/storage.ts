@@ -2,6 +2,7 @@ import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
 import { v2 as cloudinary } from "cloudinary";
+import { readOnlyHost, StorageNotConfiguredError } from "@/lib/store";
 
 /*
  * File storage for uploads (news images, videos, team photos, customer ID documents).
@@ -92,6 +93,9 @@ export async function storeUpload(value: FormDataEntryValue | null, kind: Upload
 
   if (!(value instanceof File) || value.size === 0) return undefined;
   if (usingCloudinary) throw new Error("Upload the file to Cloudinary first");
+  if (readOnlyHost) {
+    throw new StorageNotConfiguredError("File uploads need Cloudinary on this host: set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET, then redeploy.");
+  }
   const ext = path.extname(value.name).toLowerCase();
   if (!LOCAL_EXT[kind].test(ext)) throw new Error("Unsupported file type");
   const name = `${Date.now()}-${crypto.randomBytes(4).toString("hex")}${ext}`;

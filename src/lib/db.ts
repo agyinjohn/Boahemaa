@@ -1,7 +1,7 @@
 import { promises as fs } from "fs";
 import path from "path";
 import crypto from "crypto";
-import { Redis } from "@upstash/redis";
+import { readOnlyHost, StorageNotConfiguredError, store as redis } from "@/lib/store";
 import seedNews from "../../data/news.json";
 import { projects as seedProjects, team as seedTeam } from "@/lib/site";
 
@@ -11,9 +11,7 @@ import { projects as seedProjects, team as seedTeam } from "@/lib/site";
  * - in data/<name>.json on the local disk otherwise.
  */
 
-const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
-export const redis = redisUrl && redisToken ? new Redis({ url: redisUrl, token: redisToken }) : null;
+export { redis, StorageNotConfiguredError };
 
 const DATA_DIR = path.join(process.cwd(), "data");
 
@@ -165,6 +163,12 @@ async function writeValue(key: string, value: unknown) {
     await redis.set(`susubox:${key}`, value);
     return;
   }
+  if (readOnlyHost) {
+    throw new StorageNotConfiguredError(
+      "No database is connected, and this host can't save files. Connect Upstash Redis (Vercel → Storage) " +
+        "or set REDIS_URL, then redeploy. See README → Deploy to Vercel.",
+    );
+  }
   await fs.mkdir(DATA_DIR, { recursive: true });
   // Write to a temp file and rename it into place, so readers never see a half-written file.
   const file = path.join(DATA_DIR, `${key}.json`);
@@ -291,7 +295,7 @@ export const kv = {
     return entry.value as T;
   },
   async set(key: string, value: unknown, ttlSeconds: number) {
-    if (redis) await redis.set(`susubox:kv:${key}`, value, { ex: ttlSeconds });
+    if (redis) await redis.set(`susubox:kv:${key}`, value, ttlSeconds);
     else memoryKv.set(key, { value, expires: Date.now() + ttlSeconds * 1000 });
   },
   async del(key: string) {
