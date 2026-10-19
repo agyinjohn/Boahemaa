@@ -76,12 +76,12 @@ export const values = [
 ];
 
 export const team = [
-  { slug: "akosua-mensah", name: "Akosua Mensah", role: "Chief Executive Officer", dept: "Leadership", bio: "Founded SUSU BOX after 15 years in microfinance.", photo: "https://images.unsplash.com/photo-1531123897727-8f129e1688ce?w=900&auto=format&fit=crop&q=80" },
-  { slug: "kwame-asante", name: "Kwame Asante", role: "Chief Operations Officer", dept: "Leadership", bio: "Leads our branches, agents and customer care.", photo: "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=900&auto=format&fit=crop&q=80" },
+  { slug: "emmanuella-figa", name: "Emmanuella Yayra Figa", role: "Chief Executive Officer", dept: "Leadership", bio: "Founded SUSU BOX after 15 years in microfinance.", photo: "/team/Emmanuella Yayra Figa_CEO.jpeg" },
+  { slug: "akua-danquah", name: "Akua Boahemaa Danquah", role: "Chief Operations Officer", dept: "Leadership", bio: "Leads our branches, agents and customer care.", photo: "/team/Akua Boahemaa Danquah_COO.jpeg" },
   { slug: "efua-owusu", name: "Efua Owusu", role: "Head of Underwriting", dept: "Leadership", bio: "Designs plans that fit real lives and real budgets.", photo: "https://images.unsplash.com/photo-1589156280159-27698a70f29e?w=900&auto=format&fit=crop&q=80" },
-  { slug: "yaw-darko", name: "Yaw Darko", role: "Head of Claims", dept: "Operations", bio: "Keeps our promise of paying claims within 7 days.", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80" },
+  { slug: "kelvin-boakye", name: "Kelvin Boakye", role: "Lead Engineer", dept: "Technology", bio: "Builds the tools behind our mobile money payments.", photo: "/team/Kelvin Boakye_Lead Engineer.jpeg" },
   { slug: "abena-kyei", name: "Abena Kyei", role: "Customer Experience Lead", dept: "Operations", bio: "Makes sure every customer is heard and helped.", photo: "https://images.unsplash.com/photo-1567532939604-b6b5b0db2604?w=600&auto=format&fit=crop&q=80" },
-  { slug: "kofi-boateng", name: "Kofi Boateng", role: "Lead Engineer", dept: "Technology", bio: "Builds the tools behind our mobile money payments.", photo: "https://images.unsplash.com/photo-1522529599102-193c0d76b5b6?w=600&auto=format&fit=crop&q=80" },
+  { slug: "yaw-darko", name: "Yaw Darko", role: "Head of Claims", dept: "Operations", bio: "Keeps our promise of paying claims within 7 days.", photo: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=600&auto=format&fit=crop&q=80" },
   { slug: "ama-serwaa", name: "Ama Serwaa", role: "Marketing Manager", dept: "Marketing", bio: "Tells the SUSU BOX story across Ghana.", photo: "https://images.unsplash.com/photo-1614644147798-f8c0fc9da7f6?w=600&auto=format&fit=crop&q=80" },
   { slug: "nana-yeboah", name: "Nana Yeboah", role: "Field Agent Coordinator", dept: "Operations", bio: "Supports our 600+ agents in markets nationwide.", photo: "https://images.unsplash.com/photo-1504257432389-52343af06ae3?w=600&auto=format&fit=crop&q=80" },
 ];
