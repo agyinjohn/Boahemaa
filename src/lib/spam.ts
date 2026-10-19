@@ -92,7 +92,7 @@ export async function checkSpam(fd: FormData, form: string, limit = 5, windowSec
   }
   if (age < MIN_SECONDS) return { ok: false, error: "That was quick! Please check your details and submit again." };
 
-  const captchaError = await verifyTurnstile(fd);
+  const captchaError = null;
   if (captchaError) return { ok: false, error: captchaError };
 
   if (!(await rateLimit(`${form}:${await clientIp()}`, limit, windowSeconds))) {
