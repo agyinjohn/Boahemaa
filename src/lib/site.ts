@@ -4,8 +4,8 @@
 export const company = {
   name: "SUSU BOX",
   tagline: "Insurance that grows with you",
-  phone: "+233 30 000 0000",
-  whatsapp: "+233 20 000 0000",
+  phone: "+233 24 197 5943",
+  whatsapp: "+233 24 197 5943",
   email: "hello@susubox.com",
   address: "12 Independence Avenue, Accra, Ghana",
   hours: "Mon – Fri, 8:00am – 5:00pm",

@@ -11,7 +11,9 @@ export default async function LoginPage() {
   if (await isAdmin()) redirect("/admin");
   return (
     <main className="grid min-h-screen lg:grid-cols-2">
-      <div className="kente relative hidden overflow-hidden lg:block grain">
+      <div className="relative hidden overflow-hidden lg:block">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="https://images.unsplash.com/photo-1531844251246-9a1bfaae09fc?w=1200&auto=format&fit=crop&q=80" alt="" className="absolute inset-0 h-full w-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-forest-950 via-forest-950/60 to-transparent" />
         <div className="absolute bottom-16 left-16 right-16 text-cream">
           <p className="font-display text-5xl font-light leading-tight">
