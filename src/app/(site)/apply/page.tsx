@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Clock, Lock, PhoneCall, Smartphone } from "lucide-react";
 import { ApplyForm } from "./ApplyForm";
 import { paystackEnabled } from "@/lib/paystack";
-import { issueFormToken, turnstileSiteKey } from "@/lib/spam";
+import { issueFormToken } from "@/lib/spam";
 
 export const metadata: Metadata = { title: "Apply Online" };
 
@@ -40,7 +40,7 @@ export default async function ApplyPage({ searchParams }: { searchParams: Promis
             ))}
           </ul>
         </aside>
-        <ApplyForm initialProduct={product} paymentsEnabled={paystackEnabled} formToken={issueFormToken()} turnstileSiteKey={turnstileSiteKey} />
+        <ApplyForm initialProduct={product} paymentsEnabled={paystackEnabled} formToken={issueFormToken()} />
       </div>
     </section>
   );

@@ -9,7 +9,6 @@ import { cedis, products, regions } from "@/lib/site";
 import { ProductIcon } from "@/components/ProductIcon";
 import { PayButton } from "@/components/pay/PayButton";
 import { SpamTrap } from "@/components/SpamTrap";
-import { Turnstile } from "@/components/Turnstile";
 
 const steps = ["Choose cover", "Your details", "Confirm"];
 
@@ -17,12 +16,10 @@ export function ApplyForm({
   initialProduct,
   paymentsEnabled,
   formToken,
-  turnstileSiteKey,
 }: {
   initialProduct?: string;
   paymentsEnabled: boolean;
   formToken: string;
-  turnstileSiteKey: string | null;
 }) {
   const { state, onSubmit, busy, uploading, error } = useUploadForm<ApplyState>(submitApplication, {}, { document: "document" });
   const [step, setStep] = useState(0);
@@ -31,7 +28,6 @@ export function ApplyForm({
   );
   const [plan, setPlan] = useState("");
   const [fileName, setFileName] = useState("");
-  const [humanToken, setHumanToken] = useState<string | null>(null);
   const stepRefs = useRef<(HTMLDivElement | null)[]>([]);
   const product = products.find((p) => p.slug === productSlug)!;
   const price = product.plans.find((pl) => pl.name === plan)?.monthly;
@@ -195,11 +191,6 @@ export function ApplyForm({
           <input type="checkbox" name="consent" required className="mt-0.5 h-4 w-4 accent-forest-700" />
           I confirm the information above is correct and agree that SUSU BOX may contact me about this application.
         </label>
-        {turnstileSiteKey && step === 2 && (
-          <div className="mt-6">
-            <Turnstile siteKey={turnstileSiteKey} action="apply" onVerify={setHumanToken} resetKey={state} />
-          </div>
-        )}
       </div>
 
       {error && <p className="mt-6 rounded-xl bg-clay-500/10 px-4 py-3 text-sm text-clay-500">{error}</p>}
@@ -215,7 +206,7 @@ export function ApplyForm({
             Continue <ArrowRight className="h-4 w-4" />
           </button>
         ) : (
-          <button type="submit" disabled={busy || (!!turnstileSiteKey && !humanToken)} className="btn btn-gold">
+          <button type="submit" disabled={busy} className="btn btn-gold">
             {busy ? <><Loader2 className="h-4 w-4 animate-spin" /> {uploading ? "Uploading…" : "Submitting…"}</> : <>Submit application <Check className="h-4 w-4" /></>}
           </button>
         )}
